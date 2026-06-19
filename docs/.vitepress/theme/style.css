@@ -23,8 +23,9 @@
   --vp-font-family-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
     monospace;
   --vp-sidebar-width: 268px;
-  --vp-nav-height: 56px;
+  --vp-nav-height: 0px;
   --vp-layout-max-width: 1440px;
+  --fd-sidebar-pad: 268px;
 }
 
 html,
@@ -44,7 +45,8 @@ body {
   background: var(--fd-bg);
 }
 
-/* ── 隐藏多余 UI ── */
+/* ── 隐藏顶栏与多余 UI ── */
+.VPNav,
 .VPNavBarSearch,
 .VPNavBarAppearance,
 .VPFlyout,
@@ -59,33 +61,122 @@ body {
   display: none !important;
 }
 
-.VPSidebar {
-  opacity: 1 !important;
-  transform: translateX(0) !important;
-  pointer-events: auto !important;
-}
-
-/* ── 顶栏 ── */
-.VPNav {
-  background: var(--fd-bg) !important;
-  border-bottom: 1px solid var(--fd-border) !important;
-}
-
-.VPNavBar .divider {
-  display: none;
-}
-
-.VPNavBarTitle .title {
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--fd-text);
+.Layout,
+.VPContent {
+  padding-top: 0 !important;
 }
 
 /* ── 左侧栏 ── */
 .VPSidebar {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: var(--vp-sidebar-width) !important;
+  height: 100vh !important;
+  opacity: 1 !important;
+  transform: translateX(0) !important;
+  pointer-events: auto !important;
   background: var(--fd-bg) !important;
   border-right: 1px solid var(--fd-border) !important;
-  padding: 16px 12px !important;
+  padding: 0 !important;
+  z-index: 25;
+  transition: transform 0.2s ease;
+  overflow-y: auto;
+}
+
+.fd-sidebar-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 14px 12px 10px;
+  min-height: 48px;
+}
+
+.fd-sidebar-brand {
+  font-family: var(--vp-font-family-mono);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--fd-text);
+  text-decoration: none;
+  flex: 1;
+  min-width: 0;
+}
+
+.fd-sidebar-brand:hover {
+  color: var(--fd-text);
+}
+
+.fd-toggle-inline {
+  flex-shrink: 0;
+}
+
+.VPSidebar .nav {
+  padding: 2px 8px 24px;
+}
+
+.VPContent.has-sidebar {
+  padding-left: var(--fd-sidebar-pad) !important;
+  transition: padding-left 0.2s ease;
+}
+
+/* 收起侧栏 */
+html.sidebar-collapsed .VPSidebar {
+  transform: translateX(-100%) !important;
+}
+
+html.sidebar-collapsed .VPContent.has-sidebar {
+  padding-left: 0 !important;
+}
+
+/* 浮动切换条：仅收起时显示（附图2） */
+.fd-sidebar-toggle {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  z-index: 40;
+  display: none;
+  align-items: center;
+  background: var(--fd-bg);
+  border: 1px solid var(--fd-border);
+  border-radius: 8px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  padding: 2px;
+}
+
+html.sidebar-collapsed .fd-sidebar-toggle {
+  display: flex;
+}
+
+.fd-toggle-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  color: var(--fd-text-muted);
+  border-radius: 6px;
+  cursor: pointer;
+  padding: 0;
+}
+
+.fd-toggle-btn:hover {
+  background: var(--fd-muted);
+  color: var(--fd-text);
+}
+
+.fd-toggle-search {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.fd-toggle-sep {
+  width: 1px;
+  height: 18px;
+  background: var(--fd-border);
+  margin: 0 1px;
 }
 
 .VPSidebarItem .indicator {
@@ -93,16 +184,28 @@ body {
 }
 
 .VPSidebarItem.is-link .item {
-  padding: 0 8px;
+  padding: 0 4px;
 }
 
 .VPSidebarItem.is-link .VPLink {
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 8px;
   padding: 6px 10px;
   border-radius: 8px;
-  font-size: 14px;
+  font-family: var(--vp-font-family-mono);
+  font-size: 13px;
   color: var(--fd-text-muted);
   line-height: 1.4;
+}
+
+.VPSidebarItem.is-link .VPLink::before {
+  content: '';
+  flex-shrink: 0;
+  width: 14px;
+  height: 16px;
+  background: center / contain no-repeat
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 18' fill='none'%3E%3Cpath d='M3 1.5h7l3 3v11.5a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V2.5a1 1 0 0 1 1-1z' stroke='%2318181b' stroke-width='1.2'/%3E%3Cpath d='M10 1.5V5h3' stroke='%2318181b' stroke-width='1.2'/%3E%3Cpath d='M5 8h5M5 11h5' stroke='%2318181b' stroke-width='1.1' stroke-linecap='round'/%3E%3C/svg%3E");
 }
 
 .VPSidebarItem.is-link.is-active .VPLink {
@@ -141,17 +244,21 @@ body {
   margin-bottom: 8px;
 }
 
+/* 右侧目录：仅保留 VitePress .content 的左边框，避免双线 */
+.VPDocOutlineItem.root,
 .static-outline {
   list-style: none;
   margin: 0;
   padding: 0;
+  border-left: none;
+}
+
+.VPDocAsideOutline .content {
   border-left: 1px solid var(--fd-border);
+  padding-left: 14px;
 }
 
-.static-outline .outline-item {
-  margin: 0;
-}
-
+.VPDocOutlineItem .outline-link,
 .static-outline .outline-link {
   display: block;
   padding: 3px 0 3px 14px;
@@ -163,13 +270,19 @@ body {
   margin-left: -1px;
 }
 
+.VPDocOutlineItem.nested .outline-link,
 .static-outline .outline-item.outline-3 .outline-link {
   padding-left: 26px;
   font-size: 12px;
 }
 
+.VPDocOutlineItem .outline-link:hover,
 .static-outline .outline-link:hover {
   color: var(--fd-text);
+}
+
+.static-outline .outline-item {
+  margin: 0;
 }
 
 /* ── 正文 ── */
@@ -195,14 +308,14 @@ body {
   margin: 2rem 0 0.75rem;
   padding-bottom: 0;
   border: none;
-  scroll-margin-top: 80px;
+  scroll-margin-top: 24px;
 }
 
 .vp-doc h3 {
   font-size: 0.95rem;
   font-weight: 600;
   margin: 1.25rem 0 0.5rem;
-  scroll-margin-top: 80px;
+  scroll-margin-top: 24px;
 }
 
 .vp-doc p {
@@ -282,18 +395,26 @@ body {
   background: var(--fd-code-bg);
   border: 1px solid var(--fd-border);
   border-radius: 8px;
+  font-family: var(--vp-font-family-mono);
   font-size: 13px;
+  line-height: 1.5;
+  color: var(--fd-text);
 }
 
+/* 若仍包了一层 markdown 代码块，去掉内框 */
+.endpoint-block div[class*='language-'],
 .endpoint-block pre {
   margin: 0;
   padding: 0;
-  background: transparent;
-  border: none;
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
 }
 
-.endpoint-block .shiki {
+.endpoint-block .shiki,
+.endpoint-block .shiki span {
   background: transparent !important;
+  color: var(--fd-text) !important;
 }
 
 /* ── 列表 ── */
@@ -306,14 +427,18 @@ body {
   margin: 0.35rem 0;
 }
 
-@media (max-width: 1280px) {
+@media (max-width: 960px) {
   .VPDoc .aside {
     display: none !important;
   }
 }
 
-@media (max-width: 960px) {
-  .VPSidebar {
-    display: none !important;
+@media (max-width: 768px) {
+  :root {
+    --fd-sidebar-pad: 0px;
+  }
+
+  .VPContent.has-sidebar {
+    padding-left: 0 !important;
   }
 }

@@ -7,7 +7,9 @@ npm install
 npm run dev
 ```
 
-打开 http://localhost:5173/gpt-image-2.html
+打开 http://localhost:5173/gpt-image-2.html（端口占用时看终端提示）
+
+`npm run dev` 与 `npm run build` 共用同一套主题（`docs/.vitepress/theme/`），侧栏 Vopeni、收起按钮、右侧目录在开发时即可预览。
 
 ## 构建
 

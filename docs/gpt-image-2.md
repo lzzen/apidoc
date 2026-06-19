@@ -23,23 +23,11 @@ gpt-image-2 是 OpenAI GPT Image 生图模型，兼容 OpenAI Image API，适合
 
 ### 文生图
 
-<div class="endpoint-block">
-
-```
-POST https://v.openi.one/v1/images/generations
-```
-
-</div>
+<div class="endpoint-block">POST https://v.openi.one/v1/images/generations</div>
 
 ### 图像编辑
 
-<div class="endpoint-block">
-
-```
-POST https://v.openi.one/v1/images/edits
-```
-
-</div>
+<div class="endpoint-block">POST https://v.openi.one/v1/images/edits</div>
 
 ## 3. 鉴权方式
 

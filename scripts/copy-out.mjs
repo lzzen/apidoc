@@ -19,7 +19,6 @@ const INDEX_REDIRECT = `<!DOCTYPE html>
 </html>
 `;
 
-/** 去掉 VitePress SPA：子目录部署时客户端路由会 404，预渲染 HTML 已包含全文 */
 function stripSpa(html) {
   return html
     .replace(/<script type="module" src="\.\/assets\/app\.[^"]+\.js"><\/script>\s*/g, '')
@@ -30,7 +29,7 @@ function stripSpa(html) {
     .replace(/<html lang="zh-CN"/, '<html lang="zh-CN" class="light"');
 }
 
-/** 无 JS 时手动注入右侧目录（VitePress SSR 不填充 outline） */
+/** 无 SPA 时手动注入右侧目录 */
 function injectOutline(html) {
   const main = html.match(/class="vp-doc[^"]*"[\s\S]*?<div>([\s\S]*?)<\/div><\/div><\/main>/)?.[1] ?? '';
   const re = /<h([23]) id="([^"]*)"[^>]*>([^<]+)/g;
@@ -43,8 +42,8 @@ function injectOutline(html) {
 
   const list = items
     .map(({ level, id, text }) => {
-      const cls = level === 3 ? ' outline-item outline-3' : ' outline-item';
-      return `<li class="${cls.trim()}"><a href="#${id}" class="outline-link">${text}</a></li>`;
+      const cls = level === 3 ? 'outline-item outline-3' : 'outline-item';
+      return `<li class="${cls}"><a href="#${id}" class="outline-link">${text}</a></li>`;
     })
     .join('');
 
@@ -52,6 +51,12 @@ function injectOutline(html) {
     /<ul class="VPDocOutlineItem root"[^>]*>[\s\S]*?<\/ul>/,
     `<ul class="VPDocOutlineItem root static-outline">${list}</ul>`,
   );
+}
+
+async function injectSidebarUiScript(html) {
+  const js = await fs.readFile(path.resolve('scripts/sidebar-ui.inline.js'), 'utf8');
+  const tag = `<script id="fd-sidebar-ui">${js}</script>`;
+  return html.replace('</body>', `${tag}</body>`);
 }
 
 async function emptyDir(dir) {
@@ -82,7 +87,7 @@ await fs.cp(src, dest, { recursive: true });
 
 const docPage = path.join(dest, 'gpt-image-2.html');
 let html = await fs.readFile(docPage, 'utf8');
-html = injectOutline(stripSpa(html));
+html = await injectSidebarUiScript(injectOutline(stripSpa(html)));
 await fs.writeFile(docPage, html);
 
 await fs.writeFile(path.join(dest, 'index.html'), INDEX_REDIRECT);

@@ -24,7 +24,34 @@ function stripSpa(html) {
   return html
     .replace(/<script type="module" src="\.\/assets\/app\.[^"]+\.js"><\/script>\s*/g, '')
     .replace(/<link rel="modulepreload" href="\.\/assets\/[^"]+\.js">\s*/g, '')
-    .replace(/<script>window\.__VP_HASH_MAP__[\s\S]*?<\/script>\s*/g, '');
+    .replace(/<script>window\.__VP_HASH_MAP__[\s\S]*?<\/script>\s*/g, '')
+    .replace(/<script id="check-dark-mode">[\s\S]*?<\/script>\s*/g, '')
+    .replace(/<script id="check-mac-os">[\s\S]*?<\/script>\s*/g, '')
+    .replace(/<html lang="zh-CN"/, '<html lang="zh-CN" class="light"');
+}
+
+/** 无 JS 时手动注入右侧目录（VitePress SSR 不填充 outline） */
+function injectOutline(html) {
+  const main = html.match(/class="vp-doc[^"]*"[\s\S]*?<div>([\s\S]*?)<\/div><\/div><\/main>/)?.[1] ?? '';
+  const re = /<h([23]) id="([^"]*)"[^>]*>([^<]+)/g;
+  const items = [];
+  let m;
+  while ((m = re.exec(main))) {
+    items.push({ level: Number(m[1]), id: m[2], text: m[3].trim() });
+  }
+  if (!items.length) return html;
+
+  const list = items
+    .map(({ level, id, text }) => {
+      const cls = level === 3 ? ' outline-item outline-3' : ' outline-item';
+      return `<li class="${cls.trim()}"><a href="#${id}" class="outline-link">${text}</a></li>`;
+    })
+    .join('');
+
+  return html.replace(
+    /<ul class="VPDocOutlineItem root"[^>]*>[\s\S]*?<\/ul>/,
+    `<ul class="VPDocOutlineItem root static-outline">${list}</ul>`,
+  );
 }
 
 async function emptyDir(dir) {
@@ -54,7 +81,8 @@ await emptyDir(dest);
 await fs.cp(src, dest, { recursive: true });
 
 const docPage = path.join(dest, 'gpt-image-2.html');
-const html = stripSpa(await fs.readFile(docPage, 'utf8'));
+let html = await fs.readFile(docPage, 'utf8');
+html = injectOutline(stripSpa(html));
 await fs.writeFile(docPage, html);
 
 await fs.writeFile(path.join(dest, 'index.html'), INDEX_REDIRECT);

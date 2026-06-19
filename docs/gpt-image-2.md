@@ -5,6 +5,8 @@ description: OpenAI Image API 兼容接口，支持文生图与图像编辑
 
 # gpt-image-2
 
+<p class="page-desc">OpenAI Image API 兼容接口，支持文生图与图像编辑</p>
+
 gpt-image-2 是 OpenAI GPT Image 生图模型，兼容 OpenAI Image API，适合高质量文生图、图像编辑、专业设计等场景。与 Gemini 系列模型的差异在于：路径使用 `/v1/images/*`，分辨率使用 `WxH` 或 `auto`，而非 1K / 2K / 4K 档位。
 
 ## 1. 模型基本信息
@@ -113,6 +115,6 @@ gpt-image-2 默认返回 Base64 图片数据：
 
 ## 9. 注意事项
 
-- API 地址见 `site.config.ts`
+- API 地址见 `lib/site.config.ts` 中的 `primaryBaseUrl` / `globalBaseUrl`
 - 图像编辑请求体总大小建议不超过 50 MB
 - `transparent` 背景可能不受支持，请优先使用 `auto` 或 `opaque`

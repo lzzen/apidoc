@@ -3,10 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "build": "next build && node scripts/fix-static-export.mjs",
-    "build:subdir": "cross-env NEXT_PUBLIC_BASE_PATH=/docs npm run build",
+    "prebuild": "node scripts/clean-out.mjs",
+    "build": "next build && node scripts/fix-static-export.mjs && node scripts/rewrite-relative.mjs",
     "dev": "next dev",
-    "start": "next start",
+    "preview": "npm run build && npx --yes serve out -l 4173",
     "types:check": "fumadocs-mdx && next typegen && tsc --noEmit",
     "generate:openapi": "tsx scripts/generate-openapi.ts",
     "postinstall": "fumadocs-mdx"
@@ -27,7 +27,6 @@
     "@types/node": "^25.9.3",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
-    "cross-env": "^10.1.0",
     "postcss": "^8.5.15",
     "tailwindcss": "^4.3.1",
     "tsx": "^4.22.4",

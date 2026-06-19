@@ -14,9 +14,13 @@ export default async function Page(props: PageProps<'/docs/[[...slug]]'>) {
 
   return (
     <DocsPage toc={page.data.toc} full={page.data.full}>
-      <DocsTitle>{page.data.title}</DocsTitle>
-      <DocsDescription>{page.data.description}</DocsDescription>
-      <DocsBody>
+      <DocsTitle className="!mb-2 !text-lg !font-semibold !leading-snug">
+        {page.data.title}
+      </DocsTitle>
+      <DocsDescription className="!mb-5 !text-[13px] !leading-relaxed">
+        {page.data.description}
+      </DocsDescription>
+      <DocsBody className="docs-content">
         <MDX
           components={getMDXComponents({
             a: createRelativeLink(source, page),

@@ -12,7 +12,7 @@ type ParamTableProps = {
 export function ParamTable({ rows }: ParamTableProps) {
   return (
     <div className="not-prose overflow-x-auto">
-      <table className="doc-table w-full text-sm">
+      <table className="doc-table w-full">
         <thead>
           <tr>
             <th>参数</th>

@@ -24,12 +24,18 @@ html > body[data-scroll-locked] {
 
 #nd-docs-layout {
   --fd-sidebar-width: 240px;
+}
+
+#nd-docs-layout [data-sidebar],
+#nd-docs-layout #nd-sidebar {
+  background: #fafafa;
+  border-right: 1px solid #ececec;
   font-size: 13px;
 }
 
-#nd-docs-layout [data-sidebar] {
-  background: #fafafa;
-  border-right: 1px solid #ececec;
+/* 覆盖 Fumadocs text-sm / 0.9375rem，固定侧栏 13px */
+#nd-docs-layout #nd-sidebar,
+#nd-docs-layout #nd-sidebar :is(a, button, p, span, div) {
   font-size: 13px;
 }
 

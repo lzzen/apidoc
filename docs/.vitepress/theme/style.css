@@ -351,6 +351,10 @@ html.sidebar-collapsed .fd-sidebar-toggle {
   vertical-align: top;
 }
 
+.vp-doc td {
+  font-size: 12px;
+}
+
 .vp-doc th:last-child,
 .vp-doc td:last-child {
   border-right: none;

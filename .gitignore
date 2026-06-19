@@ -1,18 +1,17 @@
 # deps
 /node_modules
 
-# generated content
-.source
-
 # test & build
 /coverage
-/.next/
 /out/
 /build
+docs/.vitepress/dist
+docs/.vitepress/cache
 *.tsbuildinfo
 
 # misc
 .DS_Store
+_test-serve/
 *.pem
 /.pnp
 .pnp.js

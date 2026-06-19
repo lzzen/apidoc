@@ -1,0 +1,74 @@
+:root {
+  --vp-font-family-base: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco,
+    Consolas, 'Liberation Mono', 'Courier New', monospace;
+  --vp-font-family-mono: var(--vp-font-family-base);
+  --vp-c-bg: #fafafa;
+  --vp-c-bg-soft: #fcfcfc;
+  --vp-c-bg-alt: #f3f3f3;
+  --vp-sidebar-width: 240px;
+  --vp-layout-max-width: 1120px;
+}
+
+html { font-size: 14px; }
+
+body {
+  font-family: var(--vp-font-family-base);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.VPSidebar { font-size: 13px; }
+.VPDoc .container { padding-top: 24px; }
+.VPDoc .content-container { max-width: 820px; }
+
+.vp-doc h1 { font-size: 18px; font-weight: 600; margin-bottom: 0.5rem; }
+.vp-doc h2 { font-size: 14px; font-weight: 600; margin-top: 1.6em; margin-bottom: 0.45em; }
+.vp-doc h3 { font-size: 13px; font-weight: 600; }
+.vp-doc p { margin: 0.65em 0; }
+
+.vp-doc table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  display: table;
+}
+
+.vp-doc th,
+.vp-doc td {
+  border: none;
+  border-bottom: 1px solid #ececec;
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+}
+
+.vp-doc thead th {
+  background: #f3f3f3;
+  font-weight: 600;
+}
+
+.vp-doc pre,
+.vp-doc code {
+  font-size: 12px;
+}
+
+.vp-doc pre {
+  background: #f0f0f0;
+  border: 1px solid #e8e8e8;
+  border-radius: 0.375rem;
+}
+
+.endpoint-block {
+  margin: 0.5rem 0 0.875rem;
+  border-radius: 0.375rem;
+  border: 1px solid #e8e8e8;
+  background: #f0f0f0;
+  padding: 0.625rem 0.75rem;
+  font-size: 12px;
+}
+
+.endpoint-block pre {
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  border: none;
+}

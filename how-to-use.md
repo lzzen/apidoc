@@ -25,6 +25,8 @@ npm run build
 
 构建完成后，所有页面输出到 **`out/`** 目录，纯静态文件，**无需 Node.js**。
 
+> 构建会自动运行 `scripts/fix-static-export.mjs`，修复 Next.js 16 静态导出时 RSC 文件路径不匹配导致的 404。
+
 ```
 out/
 ├── index.html

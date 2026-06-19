@@ -17,7 +17,7 @@ npm run dev
 
 ```ts
 export const siteConfig = {
-  brandName: 'YourAPI',
+  brandName: 'Vopeni',
   primaryBaseUrl: 'https://api.example.com',
   globalBaseUrl: 'https://global.example.com',
 };

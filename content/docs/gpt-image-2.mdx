@@ -1,0 +1,109 @@
+---
+title: gpt-image-2
+description: OpenAI Image API 兼容接口，支持文生图与图像编辑
+icon: FileText
+---
+
+gpt-image-2 是 OpenAI GPT Image 生图模型，兼容 OpenAI Image API，适合高质量文生图、图像编辑、专业设计等场景。与 Gemini 系列模型的差异在于：路径使用 `/v1/images/*`，分辨率使用 `WxH` 或 `auto`，而非 1K / 2K / 4K 档位。
+
+## 1. 模型基本信息
+
+| 项目 | 说明 |
+| --- | --- |
+| 模型 ID | `gpt-image-2` |
+| 接口类型 | OpenAI Image API 兼容接口 |
+| 版本状态 | 以站点模型配置、上游可用性和上游账号权限为准 |
+| 主要能力 | 文生图、图像编辑、多参考图、局部编辑、文字渲染、灵活像素尺寸输出 |
+| 默认服务地址 | 主节点：<BaseUrl />；全球节点（120s 超时）：<BaseUrl variant="global" /> |
+
+## 2. 调用路径
+
+### 文生图
+
+<EndpointBlock method="POST" path="{BASE_URL}/v1/images/generations" />
+
+### 图像编辑
+
+<EndpointBlock method="POST" path="{BASE_URL}/v1/images/edits" />
+
+## 3. 鉴权方式
+
+所有请求需在 Header 中携带 API Key：
+
+```http
+Authorization: Bearer YOUR_API_KEY
+Content-Type: application/json
+```
+
+## 4. 文生图请求参数
+
+<ParamTable rows={[
+  { name: 'model', type: 'string', required: true, description: '固定为 gpt-image-2' },
+  { name: 'prompt', type: 'string', required: true, description: '图像描述提示词' },
+  { name: 'n', type: 'integer', description: '生成张数，默认 1，范围 1-10' },
+  { name: 'size', type: 'string', description: 'auto 或 WxH。边长为 16 的倍数，单边最大 3840，常见值 1024x1024、1536x1024、1024x1536' },
+  { name: 'quality', type: 'string', description: 'auto、low、medium、high' },
+  { name: 'output_format', type: 'string', description: 'png、jpeg、webp' },
+  { name: 'stream', type: 'boolean', description: '是否以 SSE 流式返回' },
+]} />
+
+## 5. 文生图请求示例
+
+```bash
+curl https://api.example.com/v1/images/generations \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "gpt-image-2",
+    "prompt": "A futuristic cityscape at sunset, cinematic lighting",
+    "n": 1,
+    "size": "1024x1024",
+    "quality": "high"
+  }'
+```
+
+## 6. 图像编辑请求参数
+
+图像编辑接口使用 `multipart/form-data`，主要参数如下：
+
+<ParamTable rows={[
+  { name: 'model', type: 'string', required: true, description: '固定为 gpt-image-2' },
+  { name: 'image', type: 'file', required: true, description: '待编辑图片，支持 png / jpg / webp' },
+  { name: 'prompt', type: 'string', required: true, description: '编辑指令' },
+  { name: 'mask', type: 'file', description: '可选遮罩图，用于局部重绘' },
+  { name: 'n', type: 'integer', description: '生成张数，默认 1' },
+  { name: 'size', type: 'string', description: '输出尺寸，格式同文生图' },
+]} />
+
+## 7. 图像编辑请求示例
+
+```bash
+curl https://api.example.com/v1/images/edits \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -F "model=gpt-image-2" \
+  -F "image=@./input.png" \
+  -F "prompt=Replace the background with cherry blossoms in spring" \
+  -F "n=1" \
+  -F "size=1024x1024"
+```
+
+## 8. 响应示例
+
+gpt-image-2 默认返回 Base64 图片数据：
+
+```json
+{
+  "created": 1713833628,
+  "data": [
+    {
+      "b64_json": "..."
+    }
+  ]
+}
+```
+
+## 9. 注意事项
+
+- 请将示例中的 `https://api.example.com` 替换为你在 `lib/site.config.ts` 中配置的实际服务地址
+- 图像编辑请求体总大小建议不超过 50 MB
+- `transparent` 背景在当前模型上可能不受支持，请优先使用 `auto` 或 `opaque`

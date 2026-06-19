@@ -1,0 +1,94 @@
+@import 'tailwindcss';
+@import 'fumadocs-ui/css/neutral.css';
+@import 'fumadocs-ui/css/preset.css';
+
+@theme {
+  --font-mono: var(--font-mono), ui-monospace, SFMono-Regular, Menlo, Monaco,
+    Consolas, 'Liberation Mono', 'Courier New', monospace;
+}
+
+html {
+  scrollbar-gutter: stable;
+}
+
+html > body[data-scroll-locked] {
+  margin-right: 0 !important;
+  --removed-body-scroll-bar-size: 0 !important;
+}
+
+/* BananaRouter-style docs layout */
+.docs-container {
+  --fd-layout-width: 1200px;
+}
+
+#nd-docs-layout {
+  --fd-sidebar-width: 260px;
+}
+
+#nd-docs-layout [data-sidebar] {
+  background: #fafafa;
+  border-right: 1px solid #ececec;
+}
+
+#nd-docs-layout [data-sidebar] a[data-active='true'] {
+  font-weight: 600;
+  background: #efefef;
+}
+
+#nd-docs-layout main {
+  background: #fcfcfc;
+}
+
+.prose :where(table):not(:where([class~='not-prose'] *)) {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.prose :where(table):not(:where([class~='not-prose'] *)) th,
+.prose :where(table):not(:where([class~='not-prose'] *)) td {
+  border: none;
+  border-bottom: 1px solid #ececec;
+  padding: 0.75rem 1rem;
+  text-align: left;
+  vertical-align: top;
+}
+
+.prose :where(table):not(:where([class~='not-prose'] *)) thead th {
+  background: #f3f3f3;
+  font-weight: 600;
+}
+
+.prose :where(pre):not(:where([class~='not-prose'] *)) {
+  background: #f0f0f0;
+  border: 1px solid #e8e8e8;
+  border-radius: 0.5rem;
+}
+
+.endpoint-block {
+  margin: 0.75rem 0 1.25rem;
+  border-radius: 0.5rem;
+  border: 1px solid #e8e8e8;
+  background: #f0f0f0;
+  padding: 0.875rem 1rem;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.doc-table {
+  border-collapse: collapse;
+}
+
+.doc-table th,
+.doc-table td {
+  border: none;
+  border-bottom: 1px solid #ececec;
+  padding: 0.75rem 1rem;
+  text-align: left;
+  vertical-align: top;
+}
+
+.doc-table thead th {
+  background: #f3f3f3;
+  font-weight: 600;
+}

@@ -17,55 +17,47 @@ npm run dev
 | 改侧栏 | `content/docs/meta.json` |
 | 改品牌/API 地址 | `lib/site.config.ts` |
 
-## 构建
+## 构建（静态 HTML）
 
 ```bash
 npm run build
-npm start    # 默认 http://localhost:3000
+```
+
+构建完成后，所有页面输出到 **`out/`** 目录，纯静态文件，**无需 Node.js**。
+
+```
+out/
+├── index.html
+├── docs/
+│   └── gpt-image-2.html
+└── ...
+```
+
+本地预览静态产物：
+
+```bash
+npx serve out
 ```
 
 ## 部署
 
-### 方式一：Vercel（推荐）
+将 `out/` 目录上传到任意静态托管即可：
 
-1. 将代码推送到 GitHub
-2. 在 [vercel.com](https://vercel.com) 导入仓库
-3. 框架自动识别为 Next.js，无需额外配置
-4. 可选环境变量：`NEXT_PUBLIC_SITE_URL=https://你的域名`
+| 平台 | 操作 |
+| --- | --- |
+| Nginx | `root /path/to/out;` + `try_files $uri $uri.html $uri/ =404;` |
+| 阿里云 OSS / 腾讯云 COS | 上传 `out/` 全部文件，开启静态网站托管 |
+| GitHub Pages | 推送 `out/` 到 gh-pages 分支 |
+| Cloudflare Pages | 构建命令 `npm run build`，输出目录 `out` |
 
-### 方式二：自有服务器（Node）
-
-```bash
-npm install
-npm run build
-npm start
-```
-
-用 Nginx 反代到 `127.0.0.1:3000`，或用 PM2 守护进程：
+可选环境变量（构建时设置）：
 
 ```bash
-pm2 start npm --name apidoc -- start
+NEXT_PUBLIC_SITE_URL=https://你的域名 npm run build
 ```
 
-### 方式三：Docker
+## 说明
 
-```dockerfile
-FROM node:22-alpine
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci
-COPY . .
-RUN npm run build
-EXPOSE 3000
-CMD ["npm", "start"]
-```
-
-```bash
-docker build -t apidoc .
-docker run -p 3000:3000 -e NEXT_PUBLIC_SITE_URL=https://你的域名 apidoc
-```
-
-## 注意
-
-- 项目含 `/api/search` 搜索接口，需 Node 运行时，不能直接当纯静态文件托管
-- 生产环境建议设置 `NEXT_PUBLIC_SITE_URL`，用于 SEO 与 Open Graph 图片地址
+- 已启用 `output: 'export'`，产物为纯静态 HTML
+- 搜索功能已关闭（原依赖服务端 API）
+- 不需要 `npm start`，也不需要在服务器安装 Node.js

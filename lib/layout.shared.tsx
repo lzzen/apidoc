@@ -11,7 +11,7 @@ export function baseOptions(): BaseLayoutProps {
       enabled: false,
     },
     searchToggle: {
-      enabled: true,
+      enabled: false,
     },
   };
 }

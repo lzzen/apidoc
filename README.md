@@ -72,11 +72,12 @@ icon: FileText
 ## 构建与部署
 
 ```bash
-npm run build
-npm start
+npm run build   # 输出到 out/ 目录
 ```
 
-构建产物为静态 HTML，SEO 友好，可部署到 Vercel、Netlify 或任意静态托管。
+产物为**纯静态 HTML**，上传到 Nginx / OSS / GitHub Pages 即可，**服务器无需 Node.js**。
+
+详见 [`how-to-use.md`](how-to-use.md)。
 
 ## Swagger / OpenAPI 导入（Phase 2）
 

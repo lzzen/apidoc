@@ -19,9 +19,36 @@ npm run dev
 
 ## 构建（静态 HTML）
 
+### 根目录部署（默认）
+
+网站部署在域名根路径，访问 `https://域名/docs/gpt-image-2`：
+
 ```bash
 npm run build
 ```
+
+将 `out/` 上传到 Web 服务器根目录。
+
+### 子目录部署（如 `/docs`）
+
+网站部署在 `https://域名/docs/` 子路径下，访问 `https://域名/docs/gpt-image-2`：
+
+```bash
+npm run build:subdir
+```
+
+将 `out/` **里的全部内容**上传到服务器的 `/docs/` 目录（不是上传 out 文件夹本身）。
+
+Nginx 示例：
+
+```nginx
+location /docs/ {
+    alias /var/www/html/docs/;
+    try_files $uri $uri.html $uri/ =404;
+}
+```
+
+> 子目录路径可在构建时自定义：`cross-env NEXT_PUBLIC_BASE_PATH=/apidoc npm run build`
 
 构建完成后，所有页面输出到 **`out/`** 目录，纯静态文件，**无需 Node.js**。
 
@@ -43,7 +70,12 @@ npx serve out
 
 ## 部署
 
-将 `out/` 目录上传到任意静态托管即可：
+| 场景 | 构建命令 | 上传位置 | 访问地址 |
+| --- | --- | --- | --- |
+| 根目录 | `npm run build` | Web 根目录 | `https://域名/docs/gpt-image-2` |
+| 子目录 `/docs` | `npm run build:subdir` | 服务器 `/docs/` 目录 | `https://域名/docs/gpt-image-2` |
+
+将 `out/` 目录内容上传到任意静态托管即可：
 
 | 平台 | 操作 |
 | --- | --- |

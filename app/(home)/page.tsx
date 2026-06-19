@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
+import { docsRoute } from '@/lib/shared';
 
 export default function HomePage() {
-  redirect('/docs/gpt-image-2');
+  redirect(`${docsRoute}/gpt-image-2`);
 }

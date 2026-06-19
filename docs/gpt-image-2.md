@@ -23,18 +23,18 @@ gpt-image-2 是站点提供的 OpenAI GPT Image 图像生成模型。它通过 O
 
 文生图：
 
-<div class="endpoint-block">POST {BASE_URL}/v1/images/generations</div>
+<div class="endpoint-block"><span class="http-method post">POST</span><span class="http-path">{BASE_URL}/v1/images/generations</span></div>
 
 图像编辑：
 
-<div class="endpoint-block">POST {BASE_URL}/v1/images/edits</div>
+<div class="endpoint-block"><span class="http-method post">POST</span><span class="http-path">{BASE_URL}/v1/images/edits</span></div>
 
 示例：
 
-```
-https://v.openi.one/v1/images/generations
-https://v.openi.one/v1/images/edits
-```
+<div class="url-list">
+  <div class="url-item">https://v.openi.one/v1/images/generations</div>
+  <div class="url-item">https://v.openi.one/v1/images/edits</div>
+</div>
 
 ### 请求头
 

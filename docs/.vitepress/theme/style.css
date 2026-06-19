@@ -237,6 +237,12 @@ html.sidebar-collapsed .fd-sidebar-toggle {
   padding-top: 4px;
 }
 
+/* 静态构建注入目录后必须显示（无 JS 时无 has-outline） */
+.VPDocAsideOutline.has-outline,
+.VPDocAsideOutline:has(.static-outline) {
+  display: block !important;
+}
+
 .VPDocAsideOutline .outline-title {
   font-size: 13px;
   font-weight: 500;

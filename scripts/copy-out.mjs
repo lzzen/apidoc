@@ -47,10 +47,16 @@ function injectOutline(html) {
     })
     .join('');
 
-  return html.replace(
+  let next = html.replace(
     /<ul class="VPDocOutlineItem root"[^>]*>[\s\S]*?<\/ul>/,
     `<ul class="VPDocOutlineItem root static-outline">${list}</ul>`,
   );
+
+  // 无 JS 时 VitePress 不会加 has-outline，导致 display:none
+  next = next.replace(/class="VPDocAsideOutline"/g, 'class="VPDocAsideOutline has-outline"');
+  next = next.replace(/>On this page</g, '>目录<');
+
+  return next;
 }
 
 async function injectSidebarUiScript(html) {

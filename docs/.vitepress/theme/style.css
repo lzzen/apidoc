@@ -10,6 +10,10 @@
   --fd-accent-soft: #eff6ff;
   --fd-post: #16a34a;
   --fd-post-bg: #f0fdf4;
+  --fd-get: #2563eb;
+  --fd-get-bg: #eff6ff;
+  --fd-delete: #dc2626;
+  --fd-delete-bg: #fef2f2;
   --fd-required: #dc2626;
   --fd-optional: #71717a;
 
@@ -621,6 +625,18 @@ html.sidebar-collapsed .fd-sidebar-toggle {
   color: var(--fd-post);
   background: var(--fd-post-bg);
   border: 1px solid #bbf7d0;
+}
+
+.endpoint-block .http-method.get {
+  color: var(--fd-get);
+  background: var(--fd-get-bg);
+  border: 1px solid #bfdbfe;
+}
+
+.endpoint-block .http-method.delete {
+  color: var(--fd-delete);
+  background: var(--fd-delete-bg);
+  border: 1px solid #fecaca;
 }
 
 .endpoint-block .http-path {

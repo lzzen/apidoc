@@ -91,10 +91,15 @@ async function removeJsAssets(dir) {
 await emptyDir(dest);
 await fs.cp(src, dest, { recursive: true });
 
-const docPage = path.join(dest, 'gpt-image-2.html');
-let html = await fs.readFile(docPage, 'utf8');
-html = await injectSidebarUiScript(injectOutline(stripSpa(html)));
-await fs.writeFile(docPage, html);
+const htmlFiles = (await fs.readdir(dest)).filter(
+  (name) => name.endsWith('.html') && name !== 'index.html' && name !== '404.html',
+);
+for (const name of htmlFiles) {
+  const docPage = path.join(dest, name);
+  let html = await fs.readFile(docPage, 'utf8');
+  html = await injectSidebarUiScript(injectOutline(stripSpa(html)));
+  await fs.writeFile(docPage, html);
+}
 
 await fs.writeFile(path.join(dest, 'index.html'), INDEX_REDIRECT);
 await fs.rm(path.join(dest, '404.html'), { force: true });

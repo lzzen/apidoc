@@ -7,27 +7,42 @@ description: 异步图像生成与编辑任务接口，支持提交、查询与�
 
 <p class="page-desc">异步图像生成与编辑任务接口，支持提交、查询与取消</p>
 
-异步生图接口用于提交耗时较长的图像生成 / 编辑任务。客户端先拿到 `task_id`，再通过统一任务查询接口轮询状态；任务成功后从 `result_url` 获取结果图。与同步接口 `POST /v1/images/generations`、`POST /v1/images/edits` 相互独立，互不影响。
+异步生图在**既有同步路径**上通过查询参数 `async=true` 开启。客户端提交后立即拿到 `task_id`，再通过统一任务接口轮询状态；任务成功后从 `result_url` 获取结果图。
+
+- **GPT 系列**：与同步相同的 `/v1/images/*` 路径，追加 `?async=true`。
+- **Gemini 系列**：与同步相同的 `/v1beta/models/{model}:generateContent` 路径，追加 `?async=true`。
+- **查询 / 取消**：统一走 `/v1/tasks/{task_id}`，与系列无关。
 
 ## 1. 接口概览
 
 | 项目 | 说明 |
 | --- | --- |
 | 接口类型 | 异步任务 API（提交 → 查询 / 取消） |
+| 开启方式 | 同步路径上加查询参数 `async=true`（也可在 JSON 体传 `"async": true`；**查询参数优先**） |
 | 认证方式 | Bearer Token（`Authorization: Bearer YOUR_API_KEY`） |
 | 默认服务地址 | `https://v.openi.one` |
 | 提交成功状态码 | `202 Accepted` |
-| 与同步接口关系 | 不改动同步 `/v1/images/*`；异步流量走 `/v1/tasks/*` |
+| 与同步接口关系 | 同一路径；不带 `async=true` 为同步，带则为异步 |
 
 ### 调用路径
 
+#### GPT 系列
+
 提交异步生图：
 
-<div class="endpoint-block"><span class="http-method post">POST</span><span class="http-path">{BASE_URL}/v1/tasks/images/generations</span></div>
+<div class="endpoint-block"><span class="http-method post">POST</span><span class="http-path">{BASE_URL}/v1/images/generations?async=true</span></div>
 
 提交异步编辑：
 
-<div class="endpoint-block"><span class="http-method post">POST</span><span class="http-path">{BASE_URL}/v1/tasks/images/edits</span></div>
+<div class="endpoint-block"><span class="http-method post">POST</span><span class="http-path">{BASE_URL}/v1/images/edits?async=true</span></div>
+
+#### Gemini 系列
+
+提交异步生图 / 图生图：
+
+<div class="endpoint-block"><span class="http-method post">POST</span><span class="http-path">{BASE_URL}/v1beta/models/{model}:generateContent?async=true</span></div>
+
+#### 统一任务
 
 查询任务：
 
@@ -40,14 +55,15 @@ description: 异步图像生成与编辑任务接口，支持提交、查询与�
 示例：
 
 <div class="url-list">
-  <div class="url-item">https://v.openi.one/v1/tasks/images/generations</div>
-  <div class="url-item">https://v.openi.one/v1/tasks/images/edits</div>
+  <div class="url-item">https://v.openi.one/v1/images/generations?async=true</div>
+  <div class="url-item">https://v.openi.one/v1/images/edits?async=true</div>
+  <div class="url-item">https://v.openi.one/v1beta/models/{model}:generateContent?async=true</div>
   <div class="url-item">https://v.openi.one/v1/tasks/{task_id}</div>
 </div>
 
 ### 推荐调用流程
 
-1. 调用 `POST /v1/tasks/images/generations` 或 `POST /v1/tasks/images/edits` 提交任务，拿到 `id`（即 `task_id`）。
+1. 按模型系列调用对应提交路径并带上 `async=true`，拿到响应中的 `id`（即 `task_id`）。
 2. 轮询 `GET /v1/tasks/{task_id}`，观察 `status` 从 `QUEUED` / `IN_PROGRESS` 变为 `SUCCESS` 或 `FAILURE`。
 3. 成功时读取 `result_url` 下载结果图；失败时读取 `fail_reason`。
 4. 若任务仍在排队或运行中，可调用 `DELETE /v1/tasks/{task_id}` 取消（需站点开启取消能力）。
@@ -57,17 +73,17 @@ description: 异步图像生成与编辑任务接口，支持提交、查询与�
 | 参数 | 类型 | 必填 | 说明 |
 | --- | --- | --- | --- |
 | `Authorization` | string | 是 | Bearer Token，格式为 `Bearer YOUR_API_KEY`。 |
-| `Content-Type` | string | 提交时必填 | 提交接口使用 `application/json`。 |
+| `Content-Type` | string | 提交时必填 | 提交接口使用 `application/json`（GPT 编辑若走 multipart，则为 `multipart/form-data`）。 |
 | `Idempotency-Key` | string | 否 | 提交幂等键。相同 Key 的重复提交由上游/网关去重，适合重试场景。 |
 | `X-Async-Callback-URL` | string | 否 | 任务完成回调地址。若上游支持 Webhook，将按该 URL 通知。 |
 | `X-Async-Callback-Secret` | string | 否 | 回调签名密钥，与 `X-Async-Callback-URL` 配合使用。 |
 | `X-Async-Expires-In` | string | 否 | 任务过期时间提示，透传给上游异步通道。 |
 
-## 2. 提交异步生图
+## 2. GPT：提交异步生图
 
-`POST /v1/tasks/images/generations`
+`POST /v1/images/generations?async=true`
 
-请求体兼容 OpenAI Image API 文生图字段。`model` 与 `prompt` 为必填；其余参数按站点模型能力与上游通道支持情况生效。
+请求体与同步文生图一致，兼容 OpenAI Image API。`model` 与 `prompt` 为必填；其余参数按站点模型能力与上游通道支持情况生效。
 
 ### 请求体
 
@@ -96,6 +112,7 @@ description: 异步图像生成与编辑任务接口，支持提交、查询与�
 | `background` | string | 否 | 模型默认 | 背景策略，是否支持透明取决于模型。 |
 | `moderation` | string | 否 | 模型默认 | 内容过滤强度，常见取值 `auto`、`low`。 |
 | `response_format` | string | 否 | - | 异步任务最终通过 `result_url` 取图；该字段可能被上游忽略。 |
+| `async` | boolean | 否 | - | 体内容异步开关。若同时传查询参数 `async=`，**以查询参数为准**。推荐直接用 `?async=true`。 |
 
 ### 提交成功响应
 
@@ -120,7 +137,7 @@ HTTP `202 Accepted`：
 ### cURL 示例
 
 ```bash
-curl -X POST "https://v.openi.one/v1/tasks/images/generations" \
+curl -X POST "https://v.openi.one/v1/images/generations?async=true" \
   -H "Authorization: Bearer YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -H "Idempotency-Key: gen-20260713-001" \
@@ -134,11 +151,11 @@ curl -X POST "https://v.openi.one/v1/tasks/images/generations" \
   }'
 ```
 
-## 3. 提交异步编辑
+## 3. GPT：提交异步编辑
 
-`POST /v1/tasks/images/edits`
+`POST /v1/images/edits?async=true`
 
-用于基于参考图做异步编辑或图生图。请求体同样兼容 OpenAI Image API 风格；参考图通过 `images`（URL / base64）传入。
+用于基于参考图做异步编辑或图生图。请求体与同步编辑一致；参考图通过 `images`（URL / base64）传入。
 
 ### 请求体
 
@@ -168,6 +185,7 @@ curl -X POST "https://v.openi.one/v1/tasks/images/generations" \
 | `quality` | string | 否 | 模型默认 | 渲染质量。 |
 | `output_format` | string | 否 | 模型默认 | 输出格式。 |
 | `moderation` | string | 否 | 模型默认 | 内容过滤强度。 |
+| `async` | boolean | 否 | - | 体内容异步开关；查询参数 `async=` 优先。 |
 
 `images` URL 下载规则与同步编辑接口一致：仅允许 `http`/`https`，禁止访问私有网段，单图大小与超时受网关限制。任一 URL 下载失败时，提交会返回 400。
 
@@ -178,7 +196,7 @@ curl -X POST "https://v.openi.one/v1/tasks/images/generations" \
 ### cURL 示例
 
 ```bash
-curl -X POST "https://v.openi.one/v1/tasks/images/edits" \
+curl -X POST "https://v.openi.one/v1/images/edits?async=true" \
   -H "Authorization: Bearer YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
@@ -192,11 +210,102 @@ curl -X POST "https://v.openi.one/v1/tasks/images/edits" \
   }'
 ```
 
-## 4. 查询任务
+## 4. Gemini：提交异步生成
+
+`POST /v1beta/models/{model}:generateContent?async=true`
+
+用于 Gemini 原生 `generateContent` 路径的异步生图 / 图生图。请求体与同步 Gemini 调用一致；模型名写在路径 `{model}` 中，例如 `gemini-2.0-flash-preview-image-generation`。
+
+### 路径参数
+
+| 参数 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `model` | string | 是 | Gemini 模型 ID，出现在路径中。 |
+
+### 请求体示例（文生图）
+
+```json
+{
+  "contents": [
+    {
+      "role": "user",
+      "parts": [
+        {
+          "text": "Generate a futuristic cyberpunk city at night with cinematic lighting and ultra-high detail."
+        }
+      ]
+    }
+  ],
+  "generationConfig": {
+    "responseModalities": ["TEXT", "IMAGE"]
+  }
+}
+```
+
+### 请求体示例（带参考图）
+
+```json
+{
+  "contents": [
+    {
+      "role": "user",
+      "parts": [
+        {
+          "text": "Place the product into the background scene and keep the product label sharp."
+        },
+        {
+          "inlineData": {
+            "mimeType": "image/png",
+            "data": "<base64-encoded-image>"
+          }
+        }
+      ]
+    }
+  ],
+  "generationConfig": {
+    "responseModalities": ["TEXT", "IMAGE"]
+  }
+}
+```
+
+### 说明
+
+| 项目 | 说明 |
+| --- | --- |
+| 请求体 | 与同步 `generateContent` 相同；网关按 Gemini 协议解析 `contents` / `generationConfig` 等字段。 |
+| 异步开关 | 推荐 `?async=true`。也可在 JSON 顶层传 `"async": true`；两者同时存在时以查询参数为准。 |
+| 成功响应 | 与 GPT 系列相同：HTTP `202 Accepted`，返回 `image_task`（含 `id`）。 |
+| 结果获取 | 仍通过 `GET /v1/tasks/{task_id}` 读取 `result_url`，不在提交响应中直接返回图片。 |
+
+### cURL 示例
+
+```bash
+curl -X POST "https://v.openi.one/v1beta/models/gemini-2.0-flash-preview-image-generation:generateContent?async=true" \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -H "Idempotency-Key: gemini-gen-001" \
+  -d '{
+    "contents": [
+      {
+        "role": "user",
+        "parts": [
+          {
+            "text": "Generate a futuristic cyberpunk city at night with cinematic lighting and ultra-high detail."
+          }
+        ]
+      }
+    ],
+    "generationConfig": {
+      "responseModalities": ["TEXT", "IMAGE"]
+    }
+  }'
+```
+
+## 5. 查询任务
 
 `GET /v1/tasks/{task_id}`
 
-查询当前用户名下的异步任务状态与结果。该接口为统一任务查询入口，异步生图 / 编辑任务与其它异步任务共用。
+查询当前用户名下的异步任务状态与结果。该接口为统一任务查询入口，GPT / Gemini 异步生图任务与其它异步任务共用。
 
 ### 路径参数
 
@@ -267,7 +376,7 @@ curl -X GET "https://v.openi.one/v1/tasks/task_abc123" \
   -H "Authorization: Bearer YOUR_API_KEY"
 ```
 
-## 5. 取消任务
+## 6. 取消任务
 
 `DELETE /v1/tasks/{task_id}`
 
@@ -303,32 +412,35 @@ curl -X DELETE "https://v.openi.one/v1/tasks/task_abc123" \
   -H "Authorization: Bearer YOUR_API_KEY"
 ```
 
-## 6. 接入代码示例
+## 7. 接入代码示例
 
-### TypeScript：提交并轮询
+### TypeScript：GPT 提交并轮询
 
 ```ts
 const BASE_URL = "https://v.openi.one";
 const API_KEY = process.env.API_KEY!;
 
 async function createImageTask() {
-  const submitRes = await fetch(`${BASE_URL}/v1/tasks/images/generations`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${API_KEY}`,
-      "Content-Type": "application/json",
-      "Idempotency-Key": `gen-${Date.now()}`,
+  const submitRes = await fetch(
+    `${BASE_URL}/v1/images/generations?async=true`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${API_KEY}`,
+        "Content-Type": "application/json",
+        "Idempotency-Key": `gen-${Date.now()}`,
+      },
+      body: JSON.stringify({
+        model: "gpt-image-2",
+        prompt:
+          "Generate a futuristic cyberpunk city at night with cinematic lighting and ultra-high detail.",
+        n: 1,
+        size: "1536x1024",
+        quality: "auto",
+        output_format: "png",
+      }),
     },
-    body: JSON.stringify({
-      model: "gpt-image-2",
-      prompt:
-        "Generate a futuristic cyberpunk city at night with cinematic lighting and ultra-high detail.",
-      n: 1,
-      size: "1536x1024",
-      quality: "auto",
-      output_format: "png",
-    }),
-  });
+  );
 
   if (submitRes.status !== 202) {
     throw new Error(`submit failed: ${await submitRes.text()}`);
@@ -367,7 +479,63 @@ async function createImageTask() {
 createImageTask().catch(console.error);
 ```
 
-### Python：提交并轮询
+### TypeScript：Gemini 提交并轮询
+
+```ts
+const BASE_URL = "https://v.openi.one";
+const API_KEY = process.env.API_KEY!;
+const MODEL = "gemini-2.0-flash-preview-image-generation";
+
+async function createGeminiImageTask() {
+  const submitRes = await fetch(
+    `${BASE_URL}/v1beta/models/${MODEL}:generateContent?async=true`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        contents: [
+          {
+            role: "user",
+            parts: [
+              {
+                text: "Generate a futuristic cyberpunk city at night with cinematic lighting.",
+              },
+            ],
+          },
+        ],
+        generationConfig: {
+          responseModalities: ["TEXT", "IMAGE"],
+        },
+      }),
+    },
+  );
+
+  if (submitRes.status !== 202) {
+    throw new Error(`submit failed: ${await submitRes.text()}`);
+  }
+
+  const task = (await submitRes.json()) as { id: string };
+
+  for (;;) {
+    await new Promise((r) => setTimeout(r, 2000));
+    const pollRes = await fetch(`${BASE_URL}/v1/tasks/${task.id}`, {
+      headers: { Authorization: `Bearer ${API_KEY}` },
+    });
+    const body = (await pollRes.json()) as {
+      data: { status: string; result_url?: string; fail_reason?: string };
+    };
+    if (body.data.status === "SUCCESS") return body.data.result_url;
+    if (body.data.status === "FAILURE") {
+      throw new Error(body.data.fail_reason || "task failed");
+    }
+  }
+}
+```
+
+### Python：GPT 提交并轮询
 
 ```python
 import os
@@ -383,7 +551,8 @@ headers = {
 }
 
 submit = requests.post(
-    f"{BASE_URL}/v1/tasks/images/generations",
+    f"{BASE_URL}/v1/images/generations",
+    params={"async": "true"},
     headers={**headers, "Idempotency-Key": "gen-demo-001"},
     json={
         "model": "gpt-image-2",
@@ -415,7 +584,7 @@ while True:
         raise RuntimeError(data.get("fail_reason") or "task failed")
 ```
 
-## 7. 常见错误码
+## 8. 常见错误码
 
 提交接口错误响应示例：
 
@@ -431,7 +600,7 @@ while True:
 
 | HTTP 状态码 | 常见 code | 常见原因 |
 | --- | --- | --- |
-| 400 | invalid_request | 缺少 `model` / `prompt`，JSON 格式错误，或参考图参数无效。 |
+| 400 | invalid_request | 缺少 `model` / `prompt`（或 Gemini `contents`），JSON 格式错误，或参考图参数无效。 |
 | 400 | async_image_channel_required | 选中通道未配置为异步生图通道。 |
 | 401 | invalid_api_key | 未传 API Key、Key 无效或已过期。 |
 | 403 | async_image_api_disabled | 站点未开启异步生图 API。 |
@@ -442,11 +611,14 @@ while True:
 | 501 | task_cancel_api_disabled | 站点未开启任务取消 API。 |
 | 502 / 503 | upstream_error / internal_error | 上游异常或无可用异步通道。 |
 
-## 8. 注意事项
+## 9. 注意事项
 
 | 项目 | 规则 |
 | --- | --- |
-| 同步 vs 异步 | 同步请继续调用 `/v1/images/generations` 与 `/v1/images/edits`；异步请调用本文 `/v1/tasks/images/*`。 |
+| 同步 vs 异步 | 同一路径：不带 `async=true` 为同步；带 `async=true` 为异步并返回 `202` + `task_id`。 |
+| GPT 路径 | `POST /v1/images/generations?async=true`、`POST /v1/images/edits?async=true`。 |
+| Gemini 路径 | `POST /v1beta/models/{model}:generateContent?async=true`。 |
+| 查询参数优先 | URL `async=` 与 JSON 体 `async` 同时存在时，以查询参数为准。 |
 | 轮询建议 | 提交后建议间隔 1–3 秒轮询；任务完成后停止请求。 |
 | 结果有效期 | `result_url` 可能有过期时间，成功后请尽快下载落盘。 |
 | 幂等重试 | 网络抖动重试提交时，建议固定传入 `Idempotency-Key`。 |

@@ -1,23 +1,23 @@
 ---
 title: 异步生图
-description: 异步图像生成与编辑任务接口，支持提交、查询与取消
+description: 异步图像生成与编辑任务接口，支持提交与查询
 ---
 
 # 异步生图
 
-<p class="page-desc">异步图像生成与编辑任务接口，支持提交、查询与取消</p>
+<p class="page-desc">异步图像生成与编辑任务接口，支持提交与查询</p>
 
 异步生图在**既有同步路径**上通过查询参数 `async=true` 开启。客户端提交后立即拿到 `task_id`，再通过统一任务接口轮询状态；任务成功后从 `result_url` 获取结果图。
 
 - **GPT 系列**：与同步相同的 `/v1/images/*` 路径，追加 `?async=true`。
 - **Gemini 系列**：与同步相同的 `/v1beta/models/{model}:generateContent` 路径，追加 `?async=true`。
-- **查询 / 取消**：统一走 `/v1/tasks/{task_id}`，与系列无关。
+- **查询**：统一走 `GET /v1/tasks/{task_id}`，与系列无关。**不提供取消接口**（受理即计费，取消易造成费用损失）。
 
 ## 1. 接口概览
 
 | 项目 | 说明 |
 | --- | --- |
-| 接口类型 | 异步任务 API（提交 → 查询 / 取消） |
+| 接口类型 | 异步任务 API（提交 → 查询） |
 | 开启方式 | 同步路径上加查询参数 `async=true`（也可在 JSON 体传 `"async": true`；**查询参数优先**） |
 | 认证方式 | Bearer Token（`Authorization: Bearer YOUR_API_KEY`） |
 | 默认服务地址 | `https://v.openi.one` |
@@ -48,10 +48,6 @@ description: 异步图像生成与编辑任务接口，支持提交、查询与�
 
 <div class="endpoint-block"><span class="http-method get">GET</span><span class="http-path">{BASE_URL}/v1/tasks/{task_id}</span></div>
 
-取消任务：
-
-<div class="endpoint-block"><span class="http-method delete">DELETE</span><span class="http-path">{BASE_URL}/v1/tasks/{task_id}</span></div>
-
 示例：
 
 <div class="url-list">
@@ -66,7 +62,7 @@ description: 异步图像生成与编辑任务接口，支持提交、查询与�
 1. 按模型系列调用对应提交路径并带上 `async=true`，拿到响应中的 `id`（即 `task_id`）。
 2. 轮询 `GET /v1/tasks/{task_id}`，观察 `status` 从 `QUEUED` / `IN_PROGRESS` 变为 `SUCCESS` 或 `FAILURE`。
 3. 成功时读取 `result_url` 下载结果图；失败时读取 `fail_reason`。
-4. 若任务仍在排队或运行中，可调用 `DELETE /v1/tasks/{task_id}` 取消（需站点开启取消能力）。
+4. **不要**调用取消接口：网关不提供 `DELETE /v1/tasks/{task_id}`；任务一旦受理即完成计费结算。
 
 ### 请求头
 
@@ -129,7 +125,7 @@ HTTP `202 Accepted`：
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
-| `id` | string | 公开任务 ID。后续查询、取消均使用该值，对应路径参数 `{task_id}`。 |
+| `id` | string | 公开任务 ID。后续查询均使用该值，对应路径参数 `{task_id}`。 |
 | `object` | string | 固定为 `image_task`。 |
 | `status` | string | 提交时通常为 `queued`。 |
 | `created_at` | integer | 任务创建时间（Unix 秒）。 |
@@ -366,7 +362,7 @@ curl -X POST "https://v.openi.one/v1beta/models/gemini-2.0-flash-preview-image-g
 | `QUEUED` | 排队中。 |
 | `IN_PROGRESS` | 处理中（含上游 retry）。 |
 | `SUCCESS` | 成功，可读取 `result_url`。 |
-| `FAILURE` | 失败、取消或过期，可读取 `fail_reason`。 |
+| `FAILURE` | 失败或过期，可读取 `fail_reason`。 |
 | `UNKNOWN` | 未知状态。 |
 
 ### cURL 示例
@@ -376,43 +372,7 @@ curl -X GET "https://v.openi.one/v1/tasks/task_abc123" \
   -H "Authorization: Bearer YOUR_API_KEY"
 ```
 
-## 6. 取消任务
-
-`DELETE /v1/tasks/{task_id}`
-
-取消仍可中止的异步任务。该能力受站点开关 `task_cancel_api_enabled` 控制；关闭时返回不可用错误。
-
-### 路径参数
-
-| 参数 | 类型 | 必填 | 说明 |
-| --- | --- | --- | --- |
-| `task_id` | string | 是 | 待取消任务 ID。 |
-
-### 成功响应
-
-```json
-{
-  "code": "success",
-  "message": "",
-  "data": {
-    "task_id": "task_abc123",
-    "status": "FAILURE",
-    "fail_reason": "cancelled by user",
-    "progress": "100%"
-  }
-}
-```
-
-取消成功后，任务通常进入不可继续执行的终态（例如 `FAILURE`），具体文案以返回为准。已成功或已不可取消的任务会返回冲突类错误。
-
-### cURL 示例
-
-```bash
-curl -X DELETE "https://v.openi.one/v1/tasks/task_abc123" \
-  -H "Authorization: Bearer YOUR_API_KEY"
-```
-
-## 7. 接入代码示例
+## 6. 接入代码示例
 
 ### TypeScript：GPT 提交并轮询
 
@@ -584,7 +544,7 @@ while True:
         raise RuntimeError(data.get("fail_reason") or "task failed")
 ```
 
-## 8. 常见错误码
+## 7. 常见错误码
 
 提交接口错误响应示例：
 
@@ -596,7 +556,7 @@ while True:
 }
 ```
 
-查询 / 取消接口成功时使用 `code: "success"` 信封；失败时同样返回 `code` + `message`。
+查询接口成功时使用 `code: "success"` 信封；失败时同样返回 `code` + `message`。
 
 | HTTP 状态码 | 常见 code | 常见原因 |
 | --- | --- | --- |
@@ -605,13 +565,12 @@ while True:
 | 401 | invalid_api_key | 未传 API Key、Key 无效或已过期。 |
 | 403 | async_image_api_disabled | 站点未开启异步生图 API。 |
 | 404 | task_not_exist | `task_id` 不存在，或不属于当前用户。 |
-| 409 | task_not_cancelable | 任务已进入不可取消终态。 |
+| 404 | 路由不存在 | `DELETE /v1/tasks/{task_id}` 已下线，请勿调用取消。 |
 | 429 | rate_limited | 触发限流、额度不足或余额不足。 |
-| 500 | get_task_failed / cancel_task_failed / internal_error | 网关内部错误。 |
-| 501 | task_cancel_api_disabled | 站点未开启任务取消 API。 |
+| 500 | get_task_failed / internal_error | 网关内部错误。 |
 | 502 / 503 | upstream_error / internal_error | 上游异常或无可用异步通道。 |
 
-## 9. 注意事项
+## 8. 注意事项
 
 | 项目 | 规则 |
 | --- | --- |
@@ -622,5 +581,6 @@ while True:
 | 轮询建议 | 提交后建议间隔 1–3 秒轮询；任务完成后停止请求。 |
 | 结果有效期 | `result_url` 可能有过期时间，成功后请尽快下载落盘。 |
 | 幂等重试 | 网络抖动重试提交时，建议固定传入 `Idempotency-Key`。 |
-| 权限范围 | 只能查询 / 取消当前 API Key 对应用户自己的任务。 |
+| 权限范围 | 只能查询当前 API Key 对应用户自己的任务。 |
+| 不可取消 | 不提供客户端取消；任务受理后即结算，失败由网关退款。 |
 | 模型与通道 | 异步提交只会路由到已标记异步生图能力的通道；模型需在对应分组可用。 |

@@ -11,7 +11,7 @@ npm run dev
 
 ## 编辑文档
 
-- 正文：`docs/gpt-image-2.md`、`docs/async-image.md`
+- 正文：`docs/gpt-image-2.md`、`docs/async-image.md`、`docs/seedance.md`
 - 侧栏：`docs/.vitepress/config.mts`
 - 品牌/API：`lib/site.config.ts`
 

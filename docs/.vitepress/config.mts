@@ -52,6 +52,7 @@ export default defineConfig({
     sidebar: [
       { text: 'gpt-image-2', link: 'gpt-image-2' },
       { text: '异步生图', link: 'async-image' },
+      { text: 'Seedance 视频与素材库', link: 'seedance' },
     ],
     outline: {
       level: [2, 3],

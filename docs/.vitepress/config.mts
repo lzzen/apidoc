@@ -51,6 +51,7 @@ export default defineConfig({
     siteTitle: siteConfig.brandName,
     sidebar: [
       { text: 'gpt-image-2', link: 'gpt-image-2' },
+      { text: 'Gemini 图像', link: 'gemini-image' },
       { text: '异步生图', link: 'async-image' },
       { text: 'Seedance 视频与素材库', link: 'seedance' },
     ],

@@ -210,7 +210,7 @@ curl -X POST "https://v.openi.one/v1/images/edits?async=true" \
 
 `POST /v1beta/models/{model}:generateContent?async=true`
 
-用于 Gemini 原生 `generateContent` 路径的异步生图 / 图生图。请求体与同步 Gemini 调用一致；模型名写在路径 `{model}` 中，例如 `gemini-2.0-flash-preview-image-generation`。
+用于 Gemini 原生 `generateContent` 路径的异步生图 / 图生图。请求体与同步 Gemini 调用一致；模型名写在路径 `{model}` 中，例如 `gemini-3-pro-image-preview`。同步入参与出参详见 [Gemini 图像](./gemini-image.html)。
 
 ### 路径参数
 
@@ -233,7 +233,11 @@ curl -X POST "https://v.openi.one/v1/images/edits?async=true" \
     }
   ],
   "generationConfig": {
-    "responseModalities": ["TEXT", "IMAGE"]
+    "responseModalities": ["TEXT", "IMAGE"],
+    "imageConfig": {
+      "aspectRatio": "16:9",
+      "imageSize": "2K"
+    }
   }
 }
 ```
@@ -259,7 +263,11 @@ curl -X POST "https://v.openi.one/v1/images/edits?async=true" \
     }
   ],
   "generationConfig": {
-    "responseModalities": ["TEXT", "IMAGE"]
+    "responseModalities": ["TEXT", "IMAGE"],
+    "imageConfig": {
+      "aspectRatio": "3:2",
+      "imageSize": "1K"
+    }
   }
 }
 ```
@@ -276,7 +284,7 @@ curl -X POST "https://v.openi.one/v1/images/edits?async=true" \
 ### cURL 示例
 
 ```bash
-curl -X POST "https://v.openi.one/v1beta/models/gemini-2.0-flash-preview-image-generation:generateContent?async=true" \
+curl -X POST "https://v.openi.one/v1beta/models/gemini-3-pro-image-preview:generateContent?async=true" \
   -H "Authorization: Bearer YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -H "Idempotency-Key: gemini-gen-001" \
@@ -292,7 +300,11 @@ curl -X POST "https://v.openi.one/v1beta/models/gemini-2.0-flash-preview-image-g
       }
     ],
     "generationConfig": {
-      "responseModalities": ["TEXT", "IMAGE"]
+      "responseModalities": ["TEXT", "IMAGE"],
+      "imageConfig": {
+        "aspectRatio": "16:9",
+        "imageSize": "2K"
+      }
     }
   }'
 ```
@@ -444,7 +456,7 @@ createImageTask().catch(console.error);
 ```ts
 const BASE_URL = "https://v.openi.one";
 const API_KEY = process.env.API_KEY!;
-const MODEL = "gemini-2.0-flash-preview-image-generation";
+const MODEL = "gemini-3-pro-image-preview";
 
 async function createGeminiImageTask() {
   const submitRes = await fetch(
@@ -468,6 +480,10 @@ async function createGeminiImageTask() {
         ],
         generationConfig: {
           responseModalities: ["TEXT", "IMAGE"],
+          imageConfig: {
+            aspectRatio: "16:9",
+            imageSize: "2K",
+          },
         },
       }),
     },

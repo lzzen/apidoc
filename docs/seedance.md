@@ -1,11 +1,15 @@
 ---
 title: Seedance 视频与素材库
-description: Seedance 2.0 视频提交/查询，以及 BananaRouter 兼容素材库 Action 代理
+description: Seedance 2.0 视频提交/查询，以及 BananaRouter 兼容素材库 Action 代理（尚未正式上线）
 ---
 
 # Seedance 视频与素材库
 
 <p class="page-desc">Seedance 2.0 视频提交/查询，以及 BananaRouter 兼容素材库 Action 代理</p>
+
+::: warning 尚未正式上线
+本接口文档仅供内部预览，**尚未正式对外开放**。路径、字段与能力可能变更；请勿用于生产接入。正式上线后会重新加入文档侧栏。
+:::
 
 本页描述站点对 **Seedance / 豆包视频** 与 **素材库（Asset）** 的对外接口。视频走既有异步视频任务路由；素材库以本站令牌调用，网关按渠道 BaseURL + Key 转发 BananaRouter「新版 Action」接口，**客户端不能指定上游主机**。
 

@@ -7,16 +7,16 @@ description: 图像工具接口，同步 POST /v1/imgtools，异步 POST /v1/aim
 
 <p class="page-desc">图像工具接口。用站点 `action` 选择工具，同步走 `/v1/imgtools`，异步走 `/v1/aimgtools`。</p>
 
-ImgTools 是站点的图像工具大类。上游目前是抠抠图（koukoutu），但客户端不要按官方原生路径或官方鉴权来调用。站点只开放两条 POST：同步创建、异步创建/查询。客户端用 `action` 指定工具名，站点转发前会改写成上游的 `model_key`。
+ImgTools 是站点的图像工具大类。客户端只调用本站开放的两条 POST：同步创建、异步创建/查询。用 `action` 指定工具名；不要按任何第三方原生路径或第三方鉴权头来调用。上游目标与密钥仅来自服务端渠道配置。
 
 ## 1. 基本信息
 
 | 项目 | 说明 |
 | --- | --- |
 | 渠道类型 | 控制台新建渠道，类型选 **ImgTools** |
-| 密钥 | 渠道密钥填抠抠图 API Key，不要让客户端带 `X-API-Key` |
+| 密钥 | 渠道密钥在服务端配置，不要让客户端带第三方鉴权头（如 `X-API-Key`） |
 | 模型列表 | 填写 `action` 名称，例如 `background-removal` |
-| 默认 Base URL | `https://sync.koukoutu.com`；异步请求会自动切到 `https://async.koukoutu.com` |
+| Base URL | 由渠道配置决定；客户端不可指定上游主机 |
 | 认证 | 只接受站点 Bearer Token |
 
 ### 调用路径
@@ -43,13 +43,13 @@ ImgTools 是站点的图像工具大类。上游目前是抠抠图（koukoutu）
 | `Authorization` | string | 是 | Bearer Token，格式为 `Bearer YOUR_API_KEY`。 |
 | `Content-Type` | string | 是 | `application/x-www-form-urlencoded`、`multipart/form-data` 或 `application/json`。上传文件时用 multipart。 |
 
-不要传 `X-API-Key`。上游密钥只来自渠道配置。
+不要传 `X-API-Key` 或其它上游专用鉴权头。上游密钥只来自渠道配置。
 
-站点不开放官方 `GET /v1/score`。
+站点不开放余额查询类路径；额度请在本站控制台查看。
 
 ## 2. action 与工具
 
-`action` 可以放在 POST body 或 URL query，body 优先。站点会删掉客户端的 `action`，再写成上游 `model_key`。查询时 `action=query`，上游不会收到 `model_key=query`。
+`action` 可以放在 POST body 或 URL query，body 优先。站点会按渠道约定改写内部转发字段；查询时 `action=query`，不会把 `query` 当成工具名转发给上游。
 
 | action | 说明 |
 | --- | --- |
@@ -69,7 +69,7 @@ ImgTools 是站点的图像工具大类。上游目前是抠抠图（koukoutu）
 | `image-watermark-v2` | 水印 v2 |
 | `query` | 仅异步查询，禁止出现在 `/v1/imgtools` |
 
-各工具的其余官方字段（如 `image_url`、`image`、`crop`）原样透传。字段含义以 [抠抠图文档](https://doc.koukoutu.com/) 为准。
+各工具的其余字段（如 `image_url`、`image`、`crop`）按本站约定透传。具体可选参数以站点启用能力与渠道配置为准。
 
 ## 3. 同步抠图
 
@@ -93,7 +93,7 @@ curl -X POST "https://v.openi.one/v1/imgtools" \
   -F "response=url"
 ```
 
-成功时返回上游风格 JSON，结果图在 `data.result_file`。若渠道开启了「替换上游图片 URL」，这里会是站点 `/oss/...` 地址。
+成功时返回 JSON，结果图在 `data.result_file`。若渠道开启了「替换上游图片 URL」，这里会是站点 `/oss/...` 地址。
 
 ## 4. 异步提交
 

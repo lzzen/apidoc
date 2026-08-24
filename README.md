@@ -11,7 +11,7 @@ npm run dev
 
 ## 编辑文档
 
-- 正文：`docs/gpt-image-2.md`、`docs/gemini-image.md`、`docs/async-image.md`、`docs/seedance.md`（Seedance 尚未正式上线，侧栏隐藏）
+- 正文：`docs/gpt-image-2.md`、`docs/gemini-image.md`、`docs/async-image.md`、`docs/imgtools.md`、`docs/seedance.md`（Seedance 尚未正式上线，侧栏隐藏）
 - 侧栏：`docs/.vitepress/config.mts`
 - 品牌/API：`lib/site.config.ts`
 

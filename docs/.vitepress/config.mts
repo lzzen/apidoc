@@ -53,6 +53,7 @@ export default defineConfig({
       { text: 'gpt-image-2', link: 'gpt-image-2' },
       { text: 'Gemini 图像', link: 'gemini-image' },
       { text: '异步生图', link: 'async-image' },
+      { text: 'ImgTools', link: 'imgtools' },
       // Seedance 尚未正式上线，暂不进侧栏；正文仍保留 docs/seedance.md
     ],
     outline: {

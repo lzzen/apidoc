@@ -5,7 +5,7 @@ description: 图像工具接口，同步 POST /v1/imgtools，异步 POST /v1/aim
 
 # ImgTools
 
-<p class="page-desc">图像工具接口。用 `action` 选择工具，同步走 `/v1/imgtools`，异步走 `/v1/aimgtools`。</p>
+<p class="page-desc">图像工具接口。用 `action` 选择工具；抠图走同步 `/v1/imgtools`，其余默认走异步 `/v1/aimgtools`。</p>
 
 ImgTools 提供抠图、主体提取、修图、扩图等图像处理能力。客户端只需调用本站开放的两条 POST，并用 `action` 指定工具名。
 
@@ -16,17 +16,17 @@ ImgTools 提供抠图、主体提取、修图、扩图等图像处理能力。�
 | 接口类型 | 图像工具 API（同步 / 异步） |
 | 认证方式 | Bearer Token（`Authorization: Bearer YOUR_API_KEY`） |
 | 默认服务地址 | `https://v.openi.one` |
-| 同步提交 | `POST /v1/imgtools`，成功返回处理结果 |
+| 同步提交 | `POST /v1/imgtools`，仅 `cutout` / `stamp-cutout`，成功直接返回结果 |
 | 异步提交 | `POST /v1/aimgtools`，受理返回 `202` + 任务 `id` |
 | 异步查询 | 同一路径，`action=query`，用 `task_id` 查询 |
 
 ### 调用路径
 
-同步：
+同步（仅抠图）：
 
 <div class="endpoint-block"><span class="http-method post">POST</span><span class="http-path">{BASE_URL}/v1/imgtools</span></div>
 
-异步提交 / 查询：
+异步提交 / 查询（默认）：
 
 <div class="endpoint-block"><span class="http-method post">POST</span><span class="http-path">{BASE_URL}/v1/aimgtools</span></div>
 
@@ -48,30 +48,32 @@ ImgTools 提供抠图、主体提取、修图、扩图等图像处理能力。�
 
 `action` 可以放在 POST body 或 URL query，body 优先。
 
-| action | 说明 |
-| --- | --- |
-| `cutout` | 抠图 |
-| `stamp-cutout` | 印章抠图 |
-| `extract` | 主体提取 |
-| `extract-v2` | 主体提取 v2 |
-| `stamp-crop` | 印章裁切 |
-| `stamp-upscale` | 印章超分 |
-| `to-svg` | 转 SVG |
-| `shadow` | 投影 |
-| `retouch` | 修图 |
-| `erase` | 消除 |
-| `expand` | 扩图 |
-| `watermark` | 水印 |
-| `watermark-v2` | 水印 v2 |
-| `query` | 仅异步查询，禁止出现在 `/v1/imgtools` |
+| action | 说明 | 调用方式 |
+| --- | --- | --- |
+| `cutout` | 抠图 | 同步 `/v1/imgtools` |
+| `stamp-cutout` | 印章抠图 | 同步 `/v1/imgtools` |
+| `extract` | 主体提取 | 异步 `/v1/aimgtools` |
+| `extract-v2` | 主体提取 v2 | 异步 |
+| `stamp-crop` | 印章裁切 | 异步 |
+| `stamp-upscale` | 印章超分 | 异步 |
+| `to-svg` | 转 SVG | 异步 |
+| `shadow` | 投影（需透明抠图 PNG） | 异步 |
+| `retouch` | 修图 | 异步 |
+| `erase` | 消除 | 异步 |
+| `expand` | 扩图 | 异步 |
+| `watermark` | 水印 | 异步 |
+| `watermark-v2` | 水印 v2 | 异步 |
+| `query` | 仅异步查询，禁止出现在 `/v1/imgtools` | 异步 |
 
 本接口不提供图生图。需要图生图请使用本站生图接口（如 `/v1/images/*`、Gemini `generateContent`）。
 
+除抠图外，其余工具在同步路径 `POST /v1/imgtools` 上会返回 **400**（请改用 `/v1/aimgtools`）。
+
 各工具还可传 `image_url`、`image`、`crop`、`response` 等字段，具体以所用工具支持情况为准。
 
-## 3. 同步调用
+## 3. 同步调用（仅抠图）
 
-`POST /v1/imgtools` 必须带真实工具 `action`。`action=query` 或缺少 `action` 返回 400。
+`POST /v1/imgtools` 仅支持 `cutout` 与 `stamp-cutout`。`action=query`、缺少 `action`、或其它 action 返回 400。
 
 ```bash
 curl -X POST "https://v.openi.one/v1/imgtools" \
@@ -95,13 +97,13 @@ curl -X POST "https://v.openi.one/v1/imgtools" \
 
 ## 4. 异步提交
 
-`POST /v1/aimgtools` 带工具 `action` 时为提交。受理后返回 **202**，并按次计费。
+`POST /v1/aimgtools` 带工具 `action` 时为提交（除 `query` 外均可，含抠图）。受理后返回 **202**，并按次计费。
 
 ```bash
 curl -X POST "https://v.openi.one/v1/aimgtools" \
   -H "Authorization: Bearer YOUR_API_KEY" \
-  -d "action=cutout" \
-  -d "image_url=https://example.com/photo.jpg" \
+  -d "action=shadow" \
+  -d "image_url=https://example.com/cutout.png" \
   -d "response=url"
 ```
 
@@ -149,7 +151,7 @@ curl -X POST "https://v.openi.one/v1/aimgtools" \
 
 | HTTP | 场景 |
 | --- | --- |
-| 400 | 缺少 `action`；同步路径使用 `action=query`；异步查询缺少 `task_id` |
+| 400 | 缺少 `action`；同步路径使用 `action=query` 或非抠图 action；异步查询缺少 `task_id` |
 | 401 / 403 | Bearer 无效或无权使用对应工具 |
 | 404 | `action=query` 时任务不存在 |
 | 502 / 503 | 服务暂时不可用 |

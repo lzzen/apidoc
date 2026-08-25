@@ -56,7 +56,7 @@ ImgTools 提供抠图、主体提取、修图、扩图等图像处理能力。�
 | `extract-v2` | 主体提取 v2 | 异步 |
 | `stamp-crop` | 印章裁切 | 异步 |
 | `stamp-upscale` | 印章超分 | 异步 |
-| `to-svg` | 转 SVG | 异步 |
+| `to-svg` | 矢量化（位图转矢量） | 异步 |
 | `shadow` | 投影（需透明抠图 PNG） | 异步 |
 | `retouch` | 修图 | 异步 |
 | `erase` | 消除 | 异步 |
@@ -65,11 +65,33 @@ ImgTools 提供抠图、主体提取、修图、扩图等图像处理能力。�
 | `watermark-v2` | 水印 v2 | 异步 |
 | `query` | 仅异步查询，禁止出现在 `/v1/imgtools` | 异步 |
 
+`action=to-svg` 可选 `output_format`：
+
+| 值 | 说明 |
+| --- | --- |
+| `svg` | SVG（默认，可不传） |
+| `eps` | EPS |
+| `pdf` | PDF |
+
+示例：`action=to-svg&output_format=eps`。非法取值返回 **400**。
+
 本接口不提供图生图。需要图生图请使用本站生图接口（如 `/v1/images/*`、Gemini `generateContent`）。
 
 除抠图外，其余工具在同步路径 `POST /v1/imgtools` 上会返回 **400**（请改用 `/v1/aimgtools`）。
 
 各工具还可传 `image_url`、`image`、`crop`、`response` 等字段，具体以所用工具支持情况为准。
+
+## 计价说明
+
+计费按**渠道**配置（不在全局模型计价表），参数为：
+
+- `action` 基础价
+- 参考图数量（`image_url` / `image_urls` / multipart `image`；缺省按 1）
+- 结果图数量（同步按响应 `result_file`；异步提交按 1）
+
+公式：`总价 = action基础价 + 参考图数×每张参考图加价 + 结果图数×每张结果图加价`。
+
+未在渠道配置单价的 `action` 会返回 **400**。`action=query` 查询不扣费。
 
 ## 3. 同步调用（仅抠图）
 
@@ -98,6 +120,15 @@ curl -X POST "https://v.openi.one/v1/imgtools" \
 ## 4. 异步提交
 
 `POST /v1/aimgtools` 带工具 `action` 时为提交（除 `query` 外均可，含抠图）。受理后返回 **202**，并按次计费。
+
+```bash
+curl -X POST "https://v.openi.one/v1/aimgtools" \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -d "action=to-svg" \
+  -d "image_url=https://example.com/logo.png" \
+  -d "output_format=svg" \
+  -d "response=url"
+```
 
 ```bash
 curl -X POST "https://v.openi.one/v1/aimgtools" \
@@ -151,7 +182,7 @@ curl -X POST "https://v.openi.one/v1/aimgtools" \
 
 | HTTP | 场景 |
 | --- | --- |
-| 400 | 缺少 `action`；同步路径使用 `action=query` 或非抠图 action；异步查询缺少 `task_id` |
+| 400 | 缺少 `action`；同步路径使用 `action=query` 或非抠图 action；异步查询缺少 `task_id`；渠道未配置该 action 单价；`to-svg` 的 `output_format` 非法 |
 | 401 / 403 | Bearer 无效或无权使用对应工具 |
 | 404 | `action=query` 时任务不存在 |
 | 502 / 503 | 服务暂时不可用 |

@@ -87,6 +87,7 @@ Gemini 图像模型通过 Google Gemini 原生路径接入，适合文生图、�
 | `generationConfig` | object | 是 | - | 生成配置。生图时必须包含 `responseModalities`。 |
 | `safetySettings` | array | 否 | 站点/上游默认 | 安全过滤设置，字段名与取值遵循 Gemini 协议。 |
 | `systemInstruction` | object | 否 | - | 系统指令，结构与单条 content 类似。 |
+| `response_format` | string | 否 | 渠道默认 | 网关扩展参数，非 Google 官方字段。控制同步响应中**图片 Part** 的形态：`url` 时每个图片 Part 为 `fileData`（对象存储 URL）；`b64_json` 或未传时保持官方 `inlineData`（base64）。当客户端取值与上游实际返回不一致时，网关会按需转换（base64 上传至对象存储后返回 `fileData`，或保留 `inlineData`）。 |
 | `async` | boolean | 否 | - | 体内容异步开关。推荐用查询参数 `?async=true`；两者同时存在时以查询参数为准。 |
 
 ### generationConfig
@@ -203,7 +204,72 @@ Gemini 使用分辨率桶，不是 gpt-image-2 的 `1536x1024` 这类像素尺�
 
 ## 4. 出参规范
 
-同步成功时返回 Gemini `generateContent` 风格响应。图片通常出现在 `candidates[0].content.parts` 的 `inlineData`（或 `inline_data`）中。
+同步成功时返回 **Gemini 原生** `generateContent` 风格 JSON（`candidates[].content.parts`），**不是** OpenAI `chat.completion`。请勿把 `message.content` 里的 `![image](url)` Markdown 当作本接口的出参形态——那是 `/v1/chat/completions` 等 OpenAI 兼容路径的展示格式。
+
+图片出现在 `candidates[0].content.parts` 中，具体字段取决于请求里的 `response_format`：
+
+| 请求 `response_format` | 图片 Part 形态 | 说明 |
+| --- | --- | --- |
+| `url` | `fileData` | 每个图片 Part 为 `{"fileData": {"fileUri": "<对象存储 URL>", "mimeType": "image/png"}}`；网关会按需将上游 base64 上传至对象存储并填入 URL。 |
+| `b64_json` 或未指定 | `inlineData` | 保持 Google 官方 inline base64 形态（`inlineData.data` + `mimeType`）。 |
+
+### response_format=url（fileData）
+
+请求示例（在文生图 JSON 顶层增加 `response_format`）：
+
+```json
+{
+  "contents": [
+    {
+      "role": "user",
+      "parts": [{ "text": "Generate a premium product poster." }]
+    }
+  ],
+  "generationConfig": {
+    "responseModalities": ["TEXT", "IMAGE"],
+    "imageConfig": { "aspectRatio": "16:9", "imageSize": "2K" }
+  },
+  "response_format": "url"
+}
+```
+
+成功响应示例：
+
+```json
+{
+  "candidates": [
+    {
+      "content": {
+        "role": "model",
+        "parts": [
+          {
+            "text": "Here is the generated poster."
+          },
+          {
+            "fileData": {
+              "fileUri": "https://img.openi.chat/enhance/results/d147be49f8f6ccd4afea17b8e6c20229.png?expires=1788330877",
+              "mimeType": "image/png"
+            }
+          }
+        ]
+      },
+      "finishReason": "STOP"
+    }
+  ],
+  "usageMetadata": {
+    "promptTokenCount": 120,
+    "candidatesTokenCount": 560,
+    "totalTokenCount": 680
+  }
+}
+```
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `fileData.fileUri` | string | 本站对象存储上的结果图 URL（通常带签名/过期参数）。直接 `GET` 下载即可。 |
+| `fileData.mimeType` | string | 结果图 MIME，常见 `image/png`、`image/jpeg`、`image/webp`。 |
+
+### 未指定或 response_format=b64_json（inlineData）
 
 ```json
 {
@@ -234,30 +300,52 @@ Gemini 使用分辨率桶，不是 gpt-image-2 的 `1536x1024` 这类像素尺�
 }
 ```
 
-### 响应字段
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `inlineData.mimeType` | string | 结果图 MIME。 |
+| `inlineData.data` | string | Base64 图片数据（不含 `data:image/...;base64,` 前缀）。 |
+
+### 通用响应字段
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
 | `candidates` | array | 候选结果列表。 |
-| `candidates[].content.parts` | array | 可能混有 `text` 与图片 `inlineData`。 |
-| `inlineData.mimeType` | string | 结果图 MIME。 |
-| `inlineData.data` | string | Base64 图片数据。 |
+| `candidates[].content.parts` | array | 可能混有 `text` 与图片 Part（`fileData` 或 `inlineData`，不会在同一 Part 上同时返回两者）。 |
 | `usageMetadata` | object | token 用量；字段名因上游可能略有差异。 |
 
-部分上游可能返回 snake_case（如 `inline_data`、`mime_type`）。解析时建议同时兼容 camelCase 与 snake_case。
+部分上游或中间层可能返回 snake_case（如 `inline_data`、`file_data`、`mime_type`、`file_uri`）。解析时建议同时兼容 camelCase 与 snake_case。
 
-保存图片示例：
+解析与保存图片示例（同时支持 `fileData` 与 `inlineData`）：
 
 ```ts
 import { writeFile } from "node:fs/promises";
 
-function extractImage(parts: Array<Record<string, any>>) {
+type ImagePart =
+  | { kind: "url"; mimeType: string; url: string }
+  | { kind: "base64"; mimeType: string; data: string };
+
+function extractImage(parts: Array<Record<string, unknown>>): ImagePart | null {
   for (const part of parts) {
-    const inline = part.inlineData ?? part.inline_data;
+    const fileData = (part.fileData ?? part.file_data) as
+      | { fileUri?: string; file_uri?: string; mimeType?: string; mime_type?: string }
+      | undefined;
+    const uri = fileData?.fileUri ?? fileData?.file_uri;
+    if (uri) {
+      return {
+        kind: "url",
+        mimeType: fileData?.mimeType ?? fileData?.mime_type ?? "image/png",
+        url: uri,
+      };
+    }
+
+    const inline = (part.inlineData ?? part.inline_data) as
+      | { data?: string; mimeType?: string; mime_type?: string }
+      | undefined;
     if (inline?.data) {
       return {
+        kind: "base64",
         mimeType: inline.mimeType ?? inline.mime_type ?? "image/png",
-        data: inline.data as string,
+        data: inline.data,
       };
     }
   }
@@ -268,11 +356,49 @@ const parts = response.candidates?.[0]?.content?.parts ?? [];
 const image = extractImage(parts);
 if (!image) throw new Error("No image returned");
 
-const ext = image.mimeType.includes("jpeg") ? "jpg" : "png";
-await writeFile(`output.${ext}`, Buffer.from(image.data, "base64"));
+if (image.kind === "url") {
+  const res = await fetch(image.url);
+  if (!res.ok) throw new Error(`download failed: ${res.status}`);
+  const buf = Buffer.from(await res.arrayBuffer());
+  const ext = image.mimeType.includes("jpeg") ? "jpg" : "png";
+  await writeFile(`output.${ext}`, buf);
+} else {
+  const ext = image.mimeType.includes("jpeg") ? "jpg" : "png";
+  await writeFile(`output.${ext}`, Buffer.from(image.data, "base64"));
+}
 ```
 
 ## 5. 接入代码示例
+
+### cURL：文生图（response_format=url）
+
+```bash
+curl -X POST "https://v.openi.one/v1beta/models/gemini-3-pro-image-preview:generateContent" \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "contents": [
+      {
+        "role": "user",
+        "parts": [
+          {
+            "text": "Generate a futuristic cyberpunk city at night with cinematic lighting and ultra-high detail."
+          }
+        ]
+      }
+    ],
+    "generationConfig": {
+      "responseModalities": ["TEXT", "IMAGE"],
+      "imageConfig": {
+        "aspectRatio": "16:9",
+        "imageSize": "2K"
+      }
+    },
+    "response_format": "url"
+  }'
+```
+
+响应中图片 Part 形如 `{"fileData": {"fileUri": "https://...", "mimeType": "image/png"}}`，可直接下载 `fileUri`。
 
 ### cURL：文生图
 
@@ -379,6 +505,16 @@ async function generateGeminiImage() {
   const payload = await res.json();
   const parts = payload.candidates?.[0]?.content?.parts ?? [];
   for (const part of parts) {
+    const fileData = part.fileData ?? part.file_data;
+    if (fileData?.fileUri ?? fileData?.file_uri) {
+      const url = fileData.fileUri ?? fileData.file_uri;
+      const imgRes = await fetch(url);
+      if (!imgRes.ok) throw new Error(`download failed: ${imgRes.status}`);
+      const { writeFile } = await import("node:fs/promises");
+      await writeFile("output.png", Buffer.from(await imgRes.arrayBuffer()));
+      console.log("Image saved to output.png");
+      return;
+    }
     const inline = part.inlineData ?? part.inline_data;
     if (inline?.data) {
       const { writeFile } = await import("node:fs/promises");
@@ -435,6 +571,16 @@ resp.raise_for_status()
 payload = resp.json()
 
 for part in payload.get("candidates", [{}])[0].get("content", {}).get("parts", []):
+    file_data = part.get("fileData") or part.get("file_data") or {}
+    file_uri = file_data.get("fileUri") or file_data.get("file_uri")
+    if file_uri:
+        img = requests.get(file_uri, timeout=120)
+        img.raise_for_status()
+        with open("output.png", "wb") as f:
+            f.write(img.content)
+        print("Image saved to output.png")
+        break
+
     inline = part.get("inlineData") or part.get("inline_data") or {}
     data = inline.get("data")
     if data:
@@ -519,7 +665,8 @@ curl -X POST "https://v.openi.one/v1beta/models/gemini-3-pro-image-preview:gener
 | 模型位置 | 路径参数 `{model}` | JSON 字段 `model` |
 | 尺寸 | `aspectRatio` + `imageSize`（1K/2K/4K） | `size`（如 `1536x1024` / `auto`） |
 | 参考图 | `parts.inlineData` / `parts.fileData` | `images` / `image[]` |
-| 同步响应 | Gemini `candidates[].content.parts` | OpenAI `data[].b64_json` / `url` |
+| 返回格式控制 | 顶层 `response_format`：`url` → `parts[].fileData`；默认/`b64_json` → `parts[].inlineData` | 顶层 `response_format`：`url` → `data[].url`；默认/`b64_json` → `data[].b64_json` |
+| 同步响应 | Gemini `candidates[].content.parts`（非 `chat.completion`） | OpenAI `data[].b64_json` / `url` |
 | 异步 | 同路径 `?async=true` | 同路径 `?async=true` |
 
 ## 10. 官方参考

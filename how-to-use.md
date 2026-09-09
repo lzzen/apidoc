@@ -13,6 +13,16 @@ npm run dev
 
 ## 构建
 
+双击或在项目根目录执行：
+
+```bat
+build.bat
+```
+
+脚本会强制 UTF-8 代码页、检查 `docs/*.md` 编码、执行 `npm run build`，并校验 `out/*.html` 中文是否正常。
+
+也可手动：
+
 ```bash
 npm run build
 ```

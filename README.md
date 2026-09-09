@@ -17,6 +17,8 @@ npm run dev
 
 ## 构建部署
 
+双击 `build.bat`（推荐，强制 UTF-8 并校验中文），或：
+
 ```bash
 npm run build
 ```

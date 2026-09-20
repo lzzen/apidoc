@@ -210,7 +210,7 @@ curl -X POST "https://v.openi.one/v1/images/edits?async=true" \
 
 `POST /v1beta/models/{model}:generateContent?async=true`
 
-用于 Gemini 原生 `generateContent` 路径的异步生图 / 图生图。请求体与同步 Gemini 调用一致；模型名写在路径 `{model}` 中，例如 `gemini-3-pro-image-preview`。同步入参与出参详见 [Gemini 图像](./gemini-image.html)。
+用于 Gemini 原生 `generateContent` 路径的异步生图 / 图生图。请求体与同步 Gemini 调用一致；模型名写在路径 `{model}` 中，例如 `gemini-3-pro-image-preview`。同步入参与出参详见 [Gemini生图](./gemini-image.html)。
 
 ### 路径参数
 

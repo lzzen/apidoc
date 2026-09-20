@@ -1,13 +1,13 @@
 ---
-title: Gemini 图像
+title: Gemini生图
 description: Gemini 原生 generateContent 生图接口，支持文生图、图生图与多参考图编辑
 ---
 
-# Gemini 图像
+# Gemini生图
 
 <p class="page-desc">Gemini 原生 generateContent 生图接口，支持文生图、图生图与多参考图编辑</p>
 
-Gemini 图像模型通过 Google Gemini 原生路径接入，适合文生图、图生图、多参考图融合与自然语言编辑。与 gpt-image-2 的 OpenAI `/v1/images/*` 不同：模型名写在路径中，请求体使用 `contents` / `generationConfig`，尺寸用宽高比（如 `16:9`）与分辨率桶（`1K` / `2K` / `4K`），不是 `WxH` 像素。
+Gemini 生图模型通过 Google Gemini 原生路径接入，适合文生图、图生图、多参考图融合与自然语言编辑。与 gpt-image-2 的 OpenAI `/v1/images/*` 不同：模型名写在路径中，请求体使用 `contents` / `generationConfig`，尺寸用宽高比（如 `16:9`）与分辨率桶（`1K` / `2K` / `4K`），不是 `WxH` 像素。
 
 异步调用请在同一路径追加 `?async=true`，详见 [异步生图](./async-image.html)。
 
@@ -53,7 +53,7 @@ Gemini 图像模型通过 Google Gemini 原生路径接入，适合文生图、�
 
 | 参数 | 类型 | 必填 | 说明 |
 | --- | --- | --- | --- |
-| `model` | string | 是 | Gemini 图像模型 ID，写在路径中，例如 `gemini-3-pro-image-preview`。 |
+| `model` | string | 是 | Gemini 生图模型 ID，写在路径中，例如 `gemini-3-pro-image-preview`。 |
 
 ### 请求体
 
@@ -206,12 +206,83 @@ Gemini 使用分辨率桶，不是 gpt-image-2 的 `1536x1024` 这类像素尺�
 
 同步成功时返回 **Gemini 原生** `generateContent` 风格 JSON（`candidates[].content.parts`），**不是** OpenAI `chat.completion`。请勿把 `message.content` 里的 `![image](url)` Markdown 当作本接口的出参形态——那是 `/v1/chat/completions` 等 OpenAI 兼容路径的展示格式。
 
-图片出现在 `candidates[0].content.parts` 中，具体字段取决于请求里的 `response_format`：
+图片出现在 `candidates[0].content.parts` 中，具体字段取决于上游与请求里的 `response_format`：
 
-| 请求 `response_format` | 图片 Part 形态 | 说明 |
+| 形态 | 图片 Part 字段 | 说明 |
 | --- | --- | --- |
-| `url` | `fileData` | 每个图片 Part 为 `{"fileData": {"fileUri": "<对象存储 URL>", "mimeType": "image/png"}}`；网关会按需将上游 base64 上传至对象存储并填入 URL。 |
-| `b64_json` 或未指定 | `inlineData` | 保持 Google 官方 inline base64 形态（`inlineData.data` + `mimeType`）。 |
+| 官方 URL（`response_format=url` 或上游已返回 `fileData`） | `fileData.fileUri` + `fileData.mimeType` | 每个图片 Part 为 `{"fileData": {"fileUri": "<URL>", "mimeType": "image/png"}}`；网关会按需将上游 base64 上传至对象存储并填入 URL。 |
+| 上游简写 URL | `url`（可选）+ **补全** `fileData.fileUri` | 部分上游/中转在 Part 上只返回 `{"url":"https://..."}`。本站出站会**追加** `fileData.fileUri`（值等于 `url`），并按 URL 后缀推断 `mimeType`；原 `url` 字段保留，便于兼容旧解析逻辑。 |
+| 官方 inline（未指定或 `response_format=b64_json`） | `inlineData` | `inlineData.data` + `mimeType` 的 base64 形态。 |
+
+### 出参示例（fileData，含 usageMetadata）
+
+以下为实际 Banana / Gemini 生图上游常见成功响应形态（仅图片 Part，无附带 text）：
+
+```json
+{
+  "candidates": [
+    {
+      "avgLogprobs": -1.1899594,
+      "content": {
+        "parts": [
+          {
+            "fileData": {
+              "fileUri": "https://apac.ossforai.com/2026/09/18/9acccd21-bd89-4fed-9a8f-364e38bb094b.png",
+              "mimeType": "image/png"
+            },
+            "thoughtSignature": "moMjS2uVwsFcTVkRvZ1fWmsWbAJyt7poTjs99j14T2J9w8aBrV1fcMXWr8syLfEB1X9sou43TxrG2chYxc55RN5/MV9YsENz"
+          }
+        ],
+        "role": "model"
+      },
+      "finishReason": "STOP",
+      "safetyRatings": [
+        {
+          "category": "HARM_CATEGORY_HATE_SPEECH",
+          "probability": "NEGLIGIBLE",
+          "probabilityScore": 0.000001285319282,
+          "severity": "HARM_SEVERITY_NEGLIGIBLE"
+        }
+      ]
+    }
+  ],
+  "createTime": "2026-09-18T07:48:38.580000Z",
+  "modelVersion": "gemini-3.1-flash-image-preview",
+  "responseId": "f19ab6fe8ffbc4cc2670",
+  "usageMetadata": {
+    "candidatesTokenCount": 1120,
+    "candidatesTokensDetails": [
+      {
+        "modality": "IMAGE",
+        "tokenCount": 1120
+      }
+    ],
+    "promptTokenCount": 100,
+    "promptTokensDetails": [
+      {
+        "modality": "TEXT",
+        "tokenCount": 100
+      }
+    ],
+    "totalTokenCount": 1220,
+    "trafficType": "ON_DEMAND"
+  }
+}
+```
+
+若上游仅返回 `{"url":"https://geminifile.example/files/abc.jpg"}`，本站响应会同时包含：
+
+```json
+{
+  "url": "https://geminifile.example/files/abc.jpg",
+  "fileData": {
+    "fileUri": "https://geminifile.example/files/abc.jpg",
+    "mimeType": "image/jpeg"
+  }
+}
+```
+
+解析时**优先读取** `fileData.fileUri`（或 snake_case `file_data.file_uri`）；若无 `fileData` 再读 `url`。
 
 ### response_format=url（fileData）
 
@@ -310,7 +381,7 @@ Gemini 使用分辨率桶，不是 gpt-image-2 的 `1536x1024` 这类像素尺�
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
 | `candidates` | array | 候选结果列表。 |
-| `candidates[].content.parts` | array | 可能混有 `text` 与图片 Part（`fileData` 或 `inlineData`，不会在同一 Part 上同时返回两者）。 |
+| `candidates[].content.parts` | array | 可能混有 `text` 与图片 Part（`fileData`、`inlineData`，或上游简写 `url` + 补全的 `fileData`；不会在同一 Part 上同时返回 `inlineData` 与 `fileData`）。 |
 | `usageMetadata` | object | token 用量；字段名因上游可能略有差异。 |
 
 部分上游或中间层可能返回 snake_case（如 `inline_data`、`file_data`、`mime_type`、`file_uri`）。解析时建议同时兼容 camelCase 与 snake_case。
@@ -329,7 +400,10 @@ function extractImage(parts: Array<Record<string, unknown>>): ImagePart | null {
     const fileData = (part.fileData ?? part.file_data) as
       | { fileUri?: string; file_uri?: string; mimeType?: string; mime_type?: string }
       | undefined;
-    const uri = fileData?.fileUri ?? fileData?.file_uri;
+    let uri = fileData?.fileUri ?? fileData?.file_uri;
+    if (!uri && typeof part.url === "string") {
+      uri = part.url;
+    }
     if (uri) {
       return {
         kind: "url",
@@ -506,8 +580,8 @@ async function generateGeminiImage() {
   const parts = payload.candidates?.[0]?.content?.parts ?? [];
   for (const part of parts) {
     const fileData = part.fileData ?? part.file_data;
-    if (fileData?.fileUri ?? fileData?.file_uri) {
-      const url = fileData.fileUri ?? fileData.file_uri;
+    const url = fileData?.fileUri ?? fileData?.file_uri ?? part.url;
+    if (url) {
       const imgRes = await fetch(url);
       if (!imgRes.ok) throw new Error(`download failed: ${imgRes.status}`);
       const { writeFile } = await import("node:fs/promises");
@@ -572,7 +646,7 @@ payload = resp.json()
 
 for part in payload.get("candidates", [{}])[0].get("content", {}).get("parts", []):
     file_data = part.get("fileData") or part.get("file_data") or {}
-    file_uri = file_data.get("fileUri") or file_data.get("file_uri")
+    file_uri = file_data.get("fileUri") or file_data.get("file_uri") or part.get("url")
     if file_uri:
         img = requests.get(file_uri, timeout=120)
         img.raise_for_status()
@@ -659,7 +733,7 @@ curl -X POST "https://v.openi.one/v1beta/models/gemini-3-pro-image-preview:gener
 
 ## 9. 与 gpt-image-2 的差异
 
-| 项目 | Gemini 图像 | gpt-image-2 |
+| 项目 | Gemini生图 | gpt-image-2 |
 | --- | --- | --- |
 | 路径 | `/v1beta/models/{model}:generateContent` | `/v1/images/generations`、`/v1/images/edits` |
 | 模型位置 | 路径参数 `{model}` | JSON 字段 `model` |

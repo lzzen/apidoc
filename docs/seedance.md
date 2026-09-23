@@ -21,7 +21,7 @@ description: Seedance 2.0 视频提交/查询，以及 BananaRouter 兼容素材
 | --- | --- |
 | 接口类型 | 异步视频任务 + 素材库 Action 代理 |
 | 认证方式 | Bearer Token（`Authorization: Bearer YOUR_API_KEY`） |
-| 默认服务地址 | `https://v.openi.one` |
+| 默认服务地址 | `https://openi.one` |
 | 推荐模型 | `doubao-seedance-2-0-260128`（Fast：`doubao-seedance-2-0-fast-260128`） |
 | 视频提交 | `POST /v1/video/generations`（兼容别名 `POST /v1/videos`） |
 | 视频查询 | `GET /v1/video/generations/{task_id}`（兼容别名 `GET /v1/videos/{task_id}`） |
@@ -49,10 +49,10 @@ description: Seedance 2.0 视频提交/查询，以及 BananaRouter 兼容素材
 示例：
 
 <div class="url-list">
-  <div class="url-item">https://v.openi.one/v1/video/generations</div>
-  <div class="url-item">https://v.openi.one/v1/video/generations/{task_id}</div>
-  <div class="url-item">https://v.openi.one/api/v3/assets/01/?Action=CreateAssetGroup&Version=2026-07-20</div>
-  <div class="url-item">https://v.openi.one/doubao/open/CreateAsset</div>
+  <div class="url-item">https://openi.one/v1/video/generations</div>
+  <div class="url-item">https://openi.one/v1/video/generations/{task_id}</div>
+  <div class="url-item">https://openi.one/api/v3/assets/01/?Action=CreateAssetGroup&Version=2026-07-20</div>
+  <div class="url-item">https://openi.one/doubao/open/CreateAsset</div>
 </div>
 
 ### 推荐调用流程（含素材）
@@ -185,7 +185,7 @@ description: Seedance 2.0 视频提交/查询，以及 BananaRouter 兼容素材
 ### cURL 示例
 
 ```bash
-curl -X POST "https://v.openi.one/v1/video/generations" \
+curl -X POST "https://openi.one/v1/video/generations" \
   -H "Authorization: Bearer YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
@@ -215,7 +215,7 @@ curl -X POST "https://v.openi.one/v1/video/generations" \
     "task_id": "task_abc123",
     "status": "SUCCESS",
     "progress": "100%",
-    "result_url": "https://v.openi.one/oss/....mp4",
+    "result_url": "https://openi.one/oss/....mp4",
     "fail_reason": "",
     "created_at": 1777347817,
     "updated_at": 1777347901
@@ -253,7 +253,7 @@ curl -X POST "https://v.openi.one/v1/video/generations" \
 ### 查询 cURL
 
 ```bash
-curl -X GET "https://v.openi.one/v1/video/generations/task_abc123" \
+curl -X GET "https://openi.one/v1/video/generations/task_abc123" \
   -H "Authorization: Bearer YOUR_API_KEY"
 ```
 
@@ -390,7 +390,7 @@ curl -X GET "https://v.openi.one/v1/video/generations/task_abc123" \
 推荐路径：
 
 ```bash
-curl -X POST "https://v.openi.one/api/v3/assets/01/?Action=CreateAssetGroup&Version=2026-07-20&model=doubao-seedance-2-0-260128" \
+curl -X POST "https://openi.one/api/v3/assets/01/?Action=CreateAssetGroup&Version=2026-07-20&model=doubao-seedance-2-0-260128" \
   -H "Authorization: Bearer YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
@@ -403,7 +403,7 @@ curl -X POST "https://v.openi.one/api/v3/assets/01/?Action=CreateAssetGroup&Vers
 别名路径：
 
 ```bash
-curl -X POST "https://v.openi.one/doubao/open/CreateAssetGroup?model=doubao-seedance-2-0-260128" \
+curl -X POST "https://openi.one/doubao/open/CreateAssetGroup?model=doubao-seedance-2-0-260128" \
   -H "Authorization: Bearer YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -H "X-Seedance-Model: doubao-seedance-2-0-260128" \
@@ -416,7 +416,7 @@ curl -X POST "https://v.openi.one/doubao/open/CreateAssetGroup?model=doubao-seed
 ### CreateAsset 示例
 
 ```bash
-curl -X POST "https://v.openi.one/api/v3/assets/01/?Action=CreateAsset&Version=2026-07-20&model=doubao-seedance-2-0-260128" \
+curl -X POST "https://openi.one/api/v3/assets/01/?Action=CreateAsset&Version=2026-07-20&model=doubao-seedance-2-0-260128" \
   -H "Authorization: Bearer YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
@@ -430,7 +430,7 @@ curl -X POST "https://v.openi.one/api/v3/assets/01/?Action=CreateAsset&Version=2
 ### GetAsset 轮询示例
 
 ```bash
-curl -X POST "https://v.openi.one/api/v3/assets/01/?Action=GetAsset&Version=2026-07-20&model=doubao-seedance-2-0-260128" \
+curl -X POST "https://openi.one/api/v3/assets/01/?Action=GetAsset&Version=2026-07-20&model=doubao-seedance-2-0-260128" \
   -H "Authorization: Bearer YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{"Id":"asset-xxxxxxxx"}'

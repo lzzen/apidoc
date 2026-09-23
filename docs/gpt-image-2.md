@@ -17,7 +17,7 @@ gpt-image-2 是站点提供的 OpenAI GPT Image 图像生成模型。它通过 O
 | 接口类型 | OpenAI Image API 兼容接口 |
 | 版本状态 | 以站点模型配置、上游可用性和上游账号权限为准 |
 | 主要能力 | 文生图、图像编辑、多参考图、局部编辑、文字渲染、灵活像素尺寸输出 |
-| 默认服务地址 | `https://v.openi.one` |
+| 默认服务地址 | `https://openi.one` |
 
 ### 调用路径
 
@@ -32,8 +32,8 @@ gpt-image-2 是站点提供的 OpenAI GPT Image 图像生成模型。它通过 O
 示例：
 
 <div class="url-list">
-  <div class="url-item">https://v.openi.one/v1/images/generations</div>
-  <div class="url-item">https://v.openi.one/v1/images/edits</div>
+  <div class="url-item">https://openi.one/v1/images/generations</div>
+  <div class="url-item">https://openi.one/v1/images/edits</div>
 </div>
 
 ### 请求头
@@ -112,7 +112,7 @@ OpenAI 侧可能要求账号完成 API Organization Verification 后才能使用
 ### image[] 二进制请求
 
 ```bash
-curl -X POST "https://v.openi.one/v1/images/edits" \
+curl -X POST "https://openi.one/v1/images/edits" \
   -H "Authorization: Bearer YOUR_API_KEY" \
   -F "model=gpt-image-2" \
   -F "image[]=@product.png" \
@@ -140,7 +140,7 @@ SDK 调用时字段通常名为 `image`，可以传文件数组；cURL/multipart
 ### images JSON 请求（URL 或 base64）
 
 ```bash
-curl -X POST "https://v.openi.one/v1/images/edits" \
+curl -X POST "https://openi.one/v1/images/edits" \
   -H "Authorization: Bearer YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
@@ -260,7 +260,7 @@ await writeFile("output.png", Buffer.from(imageBase64, "base64"));
 ### cURL
 
 ```bash
-curl -X POST "https://v.openi.one/v1/images/generations" \
+curl -X POST "https://openi.one/v1/images/generations" \
   -H "Authorization: Bearer YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
@@ -281,7 +281,7 @@ import { writeFile } from "node:fs/promises";
 
 const client = new OpenAI({
   apiKey: process.env.BANANAROUTER_API_KEY,
-  baseURL: "https://v.openi.one/v1",
+  baseURL: "https://openi.one/v1",
 });
 
 async function main() {
@@ -315,7 +315,7 @@ from openai import OpenAI
 
 client = OpenAI(
     api_key="YOUR_API_KEY",
-    base_url="https://v.openi.one/v1",
+    base_url="https://openi.one/v1",
 )
 
 response = client.images.generate(
@@ -364,7 +364,7 @@ func main() {
 
 	req, err := http.NewRequest(
 		http.MethodPost,
-		"https://v.openi.one/v1/images/generations",
+		"https://openi.one/v1/images/generations",
 		strings.NewReader(body),
 	)
 	if err != nil {
@@ -414,7 +414,7 @@ func main() {
 ### 图像编辑 cURL
 
 ```bash
-curl -X POST "https://v.openi.one/v1/images/edits" \
+curl -X POST "https://openi.one/v1/images/edits" \
   -H "Authorization: Bearer YOUR_API_KEY" \
   -F "model=gpt-image-2" \
   -F "image[]=@input.png" \

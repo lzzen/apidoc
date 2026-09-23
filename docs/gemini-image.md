@@ -20,7 +20,7 @@ Gemini 生图模型通过 Google Gemini 原生路径接入，适合文生图、�
 | 别名参考 | `nano-banana-pro-preview`（以站点实际启用模型为准） |
 | 版本状态 | 以站点模型配置、上游可用性和上游账号权限为准 |
 | 主要能力 | 文生图、图生图、多参考图、自然语言编辑、宽高比与分辨率桶 |
-| 默认服务地址 | `https://v.openi.one` |
+| 默认服务地址 | `https://openi.one` |
 
 ### 调用路径
 
@@ -35,9 +35,9 @@ Gemini 生图模型通过 Google Gemini 原生路径接入，适合文生图、�
 示例：
 
 <div class="url-list">
-  <div class="url-item">https://v.openi.one/v1beta/models/gemini-3-pro-image-preview:generateContent</div>
-  <div class="url-item">https://v.openi.one/v1beta/models/gemini-2.5-flash-image:generateContent</div>
-  <div class="url-item">https://v.openi.one/v1beta/models/gemini-3-pro-image-preview:generateContent?async=true</div>
+  <div class="url-item">https://openi.one/v1beta/models/gemini-3-pro-image-preview:generateContent</div>
+  <div class="url-item">https://openi.one/v1beta/models/gemini-2.5-flash-image:generateContent</div>
+  <div class="url-item">https://openi.one/v1beta/models/gemini-3-pro-image-preview:generateContent?async=true</div>
 </div>
 
 ### 请求头
@@ -447,7 +447,7 @@ if (image.kind === "url") {
 ### cURL：文生图（response_format=url）
 
 ```bash
-curl -X POST "https://v.openi.one/v1beta/models/gemini-3-pro-image-preview:generateContent" \
+curl -X POST "https://openi.one/v1beta/models/gemini-3-pro-image-preview:generateContent" \
   -H "Authorization: Bearer YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
@@ -477,7 +477,7 @@ curl -X POST "https://v.openi.one/v1beta/models/gemini-3-pro-image-preview:gener
 ### cURL：文生图
 
 ```bash
-curl -X POST "https://v.openi.one/v1beta/models/gemini-3-pro-image-preview:generateContent" \
+curl -X POST "https://openi.one/v1beta/models/gemini-3-pro-image-preview:generateContent" \
   -H "Authorization: Bearer YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
@@ -504,7 +504,7 @@ curl -X POST "https://v.openi.one/v1beta/models/gemini-3-pro-image-preview:gener
 ### cURL：图生图
 
 ```bash
-curl -X POST "https://v.openi.one/v1beta/models/gemini-2.5-flash-image:generateContent" \
+curl -X POST "https://openi.one/v1beta/models/gemini-2.5-flash-image:generateContent" \
   -H "Authorization: Bearer YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
@@ -537,7 +537,7 @@ curl -X POST "https://v.openi.one/v1beta/models/gemini-2.5-flash-image:generateC
 ### TypeScript
 
 ```ts
-const BASE_URL = "https://v.openi.one";
+const BASE_URL = "https://openi.one";
 const API_KEY = process.env.API_KEY!;
 const MODEL = "gemini-3-pro-image-preview";
 
@@ -610,7 +610,7 @@ import base64
 import os
 import requests
 
-BASE_URL = "https://v.openi.one"
+BASE_URL = "https://openi.one"
 API_KEY = os.environ["API_KEY"]
 MODEL = "gemini-3-pro-image-preview"
 
@@ -677,7 +677,7 @@ else:
 请求体与同步完全相同。完整说明、状态表与取消接口见 [异步生图](./async-image.html)。
 
 ```bash
-curl -X POST "https://v.openi.one/v1beta/models/gemini-3-pro-image-preview:generateContent?async=true" \
+curl -X POST "https://openi.one/v1beta/models/gemini-3-pro-image-preview:generateContent?async=true" \
   -H "Authorization: Bearer YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{

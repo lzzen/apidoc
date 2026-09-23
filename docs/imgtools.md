@@ -15,7 +15,7 @@ ImgTools 提供抠图、主体提取、修图、扩图等图像处理能力。�
 | --- | --- |
 | 接口类型 | 图像工具 API（同步 / 异步） |
 | 认证方式 | Bearer Token（`Authorization: Bearer YOUR_API_KEY`） |
-| 默认服务地址 | `https://v.openi.one` |
+| 默认服务地址 | `https://openi.one` |
 | 同步提交 | `POST /v1/imgtools`，仅 `cutout` / `stamp-cutout`，成功直接返回结果 |
 | 异步提交 | `POST /v1/aimgtools`，受理返回 `202` + 任务 `id` |
 | 异步查询 | 同一路径，`action=query`，用 `task_id` 查询 |
@@ -33,8 +33,8 @@ ImgTools 提供抠图、主体提取、修图、扩图等图像处理能力。�
 示例：
 
 <div class="url-list">
-  <div class="url-item">https://v.openi.one/v1/imgtools</div>
-  <div class="url-item">https://v.openi.one/v1/aimgtools</div>
+  <div class="url-item">https://openi.one/v1/imgtools</div>
+  <div class="url-item">https://openi.one/v1/aimgtools</div>
 </div>
 
 ### 请求头
@@ -98,7 +98,7 @@ ImgTools 提供抠图、主体提取、修图、扩图等图像处理能力。�
 `POST /v1/imgtools` 仅支持 `cutout` 与 `stamp-cutout`。`action=query`、缺少 `action`、或其它 action 返回 400。
 
 ```bash
-curl -X POST "https://v.openi.one/v1/imgtools" \
+curl -X POST "https://openi.one/v1/imgtools" \
   -H "Authorization: Bearer YOUR_API_KEY" \
   -d "action=cutout" \
   -d "image_url=https://example.com/photo.jpg" \
@@ -108,7 +108,7 @@ curl -X POST "https://v.openi.one/v1/imgtools" \
 上传本地文件：
 
 ```bash
-curl -X POST "https://v.openi.one/v1/imgtools" \
+curl -X POST "https://openi.one/v1/imgtools" \
   -H "Authorization: Bearer YOUR_API_KEY" \
   -F "action=cutout" \
   -F "image=@photo.jpg" \
@@ -122,7 +122,7 @@ curl -X POST "https://v.openi.one/v1/imgtools" \
 `POST /v1/aimgtools` 带工具 `action` 时为提交（除 `query` 外均可，含抠图）。受理后返回 **202**，并按次计费。
 
 ```bash
-curl -X POST "https://v.openi.one/v1/aimgtools" \
+curl -X POST "https://openi.one/v1/aimgtools" \
   -H "Authorization: Bearer YOUR_API_KEY" \
   -d "action=to-svg" \
   -d "image_url=https://example.com/logo.png" \
@@ -131,7 +131,7 @@ curl -X POST "https://v.openi.one/v1/aimgtools" \
 ```
 
 ```bash
-curl -X POST "https://v.openi.one/v1/aimgtools" \
+curl -X POST "https://openi.one/v1/aimgtools" \
   -H "Authorization: Bearer YOUR_API_KEY" \
   -d "action=shadow" \
   -d "image_url=https://example.com/cutout.png" \
@@ -154,7 +154,7 @@ curl -X POST "https://v.openi.one/v1/aimgtools" \
 同一条 `POST /v1/aimgtools`，`action=query`。查询不再扣费。
 
 ```bash
-curl -X POST "https://v.openi.one/v1/aimgtools" \
+curl -X POST "https://openi.one/v1/aimgtools" \
   -H "Authorization: Bearer YOUR_API_KEY" \
   -d "action=query" \
   -d "task_id=task_xxxx" \
@@ -173,7 +173,7 @@ curl -X POST "https://v.openi.one/v1/aimgtools" \
   "message": "success",
   "data": {
     "state": 1,
-    "result_file": "https://v.openi.one/oss/...."
+    "result_file": "https://openi.one/oss/...."
   }
 }
 ```

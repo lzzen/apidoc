@@ -20,7 +20,7 @@ description: 异步图像生成与编辑任务接口，支持提交与查询
 | 接口类型 | 异步任务 API（提交 → 查询） |
 | 开启方式 | 同步路径上加查询参数 `async=true`（也可在 JSON 体传 `"async": true`；**查询参数优先**） |
 | 认证方式 | Bearer Token（`Authorization: Bearer YOUR_API_KEY`） |
-| 默认服务地址 | `https://v.openi.one` |
+| 默认服务地址 | `https://openi.one` |
 | 提交成功状态码 | `202 Accepted` |
 | 与同步接口关系 | 同一路径；不带 `async=true` 为同步，带则为异步 |
 
@@ -51,10 +51,10 @@ description: 异步图像生成与编辑任务接口，支持提交与查询
 示例：
 
 <div class="url-list">
-  <div class="url-item">https://v.openi.one/v1/images/generations?async=true</div>
-  <div class="url-item">https://v.openi.one/v1/images/edits?async=true</div>
-  <div class="url-item">https://v.openi.one/v1beta/models/{model}:generateContent?async=true</div>
-  <div class="url-item">https://v.openi.one/v1/tasks/{task_id}</div>
+  <div class="url-item">https://openi.one/v1/images/generations?async=true</div>
+  <div class="url-item">https://openi.one/v1/images/edits?async=true</div>
+  <div class="url-item">https://openi.one/v1beta/models/{model}:generateContent?async=true</div>
+  <div class="url-item">https://openi.one/v1/tasks/{task_id}</div>
 </div>
 
 ### 推荐调用流程
@@ -133,7 +133,7 @@ HTTP `202 Accepted`：
 ### cURL 示例
 
 ```bash
-curl -X POST "https://v.openi.one/v1/images/generations?async=true" \
+curl -X POST "https://openi.one/v1/images/generations?async=true" \
   -H "Authorization: Bearer YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -H "Idempotency-Key: gen-20260713-001" \
@@ -192,7 +192,7 @@ curl -X POST "https://v.openi.one/v1/images/generations?async=true" \
 ### cURL 示例
 
 ```bash
-curl -X POST "https://v.openi.one/v1/images/edits?async=true" \
+curl -X POST "https://openi.one/v1/images/edits?async=true" \
   -H "Authorization: Bearer YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
@@ -284,7 +284,7 @@ curl -X POST "https://v.openi.one/v1/images/edits?async=true" \
 ### cURL 示例
 
 ```bash
-curl -X POST "https://v.openi.one/v1beta/models/gemini-3-pro-image-preview:generateContent?async=true" \
+curl -X POST "https://openi.one/v1beta/models/gemini-3-pro-image-preview:generateContent?async=true" \
   -H "Authorization: Bearer YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -H "Idempotency-Key: gemini-gen-001" \
@@ -380,7 +380,7 @@ curl -X POST "https://v.openi.one/v1beta/models/gemini-3-pro-image-preview:gener
 ### cURL 示例
 
 ```bash
-curl -X GET "https://v.openi.one/v1/tasks/task_abc123" \
+curl -X GET "https://openi.one/v1/tasks/task_abc123" \
   -H "Authorization: Bearer YOUR_API_KEY"
 ```
 
@@ -389,7 +389,7 @@ curl -X GET "https://v.openi.one/v1/tasks/task_abc123" \
 ### TypeScript：GPT 提交并轮询
 
 ```ts
-const BASE_URL = "https://v.openi.one";
+const BASE_URL = "https://openi.one";
 const API_KEY = process.env.API_KEY!;
 
 async function createImageTask() {
@@ -454,7 +454,7 @@ createImageTask().catch(console.error);
 ### TypeScript：Gemini 提交并轮询
 
 ```ts
-const BASE_URL = "https://v.openi.one";
+const BASE_URL = "https://openi.one";
 const API_KEY = process.env.API_KEY!;
 const MODEL = "gemini-3-pro-image-preview";
 
@@ -518,7 +518,7 @@ import os
 import time
 import requests
 
-BASE_URL = "https://v.openi.one"
+BASE_URL = "https://openi.one"
 API_KEY = os.environ["API_KEY"]
 
 headers = {

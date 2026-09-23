@@ -17,7 +17,7 @@ gpt-image-2.5 是站点提供的 OpenAI GPT Image 图像生成模型。调用方
 | 接口类型 | OpenAI Image API 兼容接口 |
 | 入参规范 | 与 `gpt-image-2` 相同：`size` / `quality` / `n` / `response_format` / 编辑 multipart 等 |
 | 版本状态 | 以站点模型配置与可用性为准 |
-| 默认服务地址 | `https://v.openi.one` |
+| 默认服务地址 | `https://openi.one` |
 
 ### 调用路径
 

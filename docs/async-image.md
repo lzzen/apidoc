@@ -9,16 +9,17 @@ description: 异步图像生成与编辑任务接口，支持提交与查询
 
 异步生图在**既有同步路径**上通过查询参数 `async=true` 开启。客户端提交后立即拿到 `task_id`，再通过统一任务接口轮询状态；任务成功后从 `result_url` 获取结果图。
 
-- **GPT 系列**：与同步相同的 `/v1/images/*` 路径，追加 `?async=true`。
-- **Gemini 系列**：与同步相同的 `/v1beta/models/{model}:generateContent` 路径，追加 `?async=true`。
-- **查询**：统一走 `GET /v1/tasks/{task_id}`，与系列无关。**不提供取消接口**（受理即计费，取消易造成费用损失）。
+- **推荐提交**：`POST /v1/tasks`，请求体与对应同步接口相同（OpenAI 生图/改图 JSON 或 multipart、Gemini `contents`、ImgTools `action`），**无需**额外类型字段。
+- **兼容提交**：GPT / Gemini 同步路径追加 `?async=true`；ImgTools 仍可用 `POST /v1/aimgtools`（内部与 `POST /v1/tasks` 相同实现）。
+- **已废弃**：`POST /v1/tasks/images/generations`、`POST /v1/tasks/images/edits`。
+- **查询**：`GET /v1/tasks/{task_id}` 单条；`GET /v1/tasks` 当前令牌任务列表。**不提供取消接口**。
 
 ## 1. 接口概览
 
 | 项目 | 说明 |
 | --- | --- |
 | 接口类型 | 异步任务 API（提交 → 查询） |
-| 开启方式 | 同步路径上加查询参数 `async=true`（也可在 JSON 体传 `"async": true`；**查询参数优先**） |
+| 开启方式 | `POST /v1/tasks`；或同步路径上加 `async=true`（JSON 体 `"async": true` 亦可；**查询参数优先**） |
 | 认证方式 | Bearer Token（`Authorization: Bearer YOUR_API_KEY`） |
 | 默认服务地址 | `https://openi.one` |
 | 提交成功状态码 | `202 Accepted` |
@@ -44,9 +45,17 @@ description: 异步图像生成与编辑任务接口，支持提交与查询
 
 #### 统一任务
 
-查询任务：
+提交（推荐）：
+
+<div class="endpoint-block"><span class="http-method post">POST</span><span class="http-path">{BASE_URL}/v1/tasks</span></div>
+
+查询单条：
 
 <div class="endpoint-block"><span class="http-method get">GET</span><span class="http-path">{BASE_URL}/v1/tasks/{task_id}</span></div>
+
+查询列表：
+
+<div class="endpoint-block"><span class="http-method get">GET</span><span class="http-path">{BASE_URL}/v1/tasks</span></div>
 
 示例：
 
@@ -54,6 +63,7 @@ description: 异步图像生成与编辑任务接口，支持提交与查询
   <div class="url-item">https://openi.one/v1/images/generations?async=true</div>
   <div class="url-item">https://openi.one/v1/images/edits?async=true</div>
   <div class="url-item">https://openi.one/v1beta/models/{model}:generateContent?async=true</div>
+  <div class="url-item">https://openi.one/v1/tasks</div>
   <div class="url-item">https://openi.one/v1/tasks/{task_id}</div>
 </div>
 
@@ -62,7 +72,7 @@ description: 异步图像生成与编辑任务接口，支持提交与查询
 1. 按模型系列调用对应提交路径并带上 `async=true`，拿到响应中的 `id`（即 `task_id`）。
 2. 轮询 `GET /v1/tasks/{task_id}`，观察 `status` 从 `QUEUED` / `IN_PROGRESS` 变为 `SUCCESS` 或 `FAILURE`。
 3. 成功时读取 `result_url` 下载结果图；失败时读取 `fail_reason`。
-4. **不要**调用取消接口：网关不提供 `DELETE /v1/tasks/{task_id}`；任务一旦受理即完成计费结算。
+4. **不要**调用取消接口：网关不提供 `DELETE /v1/tasks/{task_id}`。统一异步路径为受理冻结额度，成功实扣，失败解冻（账单不出现「退款」文案）。
 
 ### 请求头
 
@@ -71,8 +81,8 @@ description: 异步图像生成与编辑任务接口，支持提交与查询
 | `Authorization` | string | 是 | Bearer Token，格式为 `Bearer YOUR_API_KEY`。 |
 | `Content-Type` | string | 提交时必填 | 提交接口使用 `application/json`（GPT 编辑若走 multipart，则为 `multipart/form-data`）。 |
 | `Idempotency-Key` | string | 否 | 提交幂等键。相同 Key 的重复提交由上游/网关去重，适合重试场景。 |
-| `X-Async-Callback-URL` | string | 否 | 任务完成回调地址。若上游支持 Webhook，将按该 URL 通知。 |
-| `X-Async-Callback-Secret` | string | 否 | 回调签名密钥，与 `X-Async-Callback-URL` 配合使用。 |
+| `X-Async-Callback-URL` | string | 否 | 任务终态时本站 POST 回调地址（载荷与 `GET /v1/tasks/{id}` 一致）；仍会按通道能力透传上游。 |
+| `X-Async-Callback-Secret` | string | 否 | 出站回调可选密钥（请求头 `X-Async-Callback-Secret` / `X-Webhook-Signature`）。 |
 | `X-Async-Expires-In` | string | 否 | 任务过期时间提示，透传给上游异步通道。 |
 
 ## 2. GPT：提交异步生图

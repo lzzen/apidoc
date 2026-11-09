@@ -159,6 +159,26 @@ html.sidebar-collapsed .fd-sidebar-toggle {
   display: flex;
 }
 
+/* 小屏遮罩 + 抽屉式侧栏 */
+.fd-sidebar-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 24;
+  background: rgba(15, 23, 42, 0.45);
+  border: none;
+  padding: 0;
+  margin: 0;
+}
+
+body.fd-sidebar-open-mobile .fd-sidebar-backdrop {
+  display: block;
+}
+
+body.fd-sidebar-open-mobile {
+  overflow: hidden;
+}
+
 .fd-toggle-btn {
   display: flex;
   align-items: center;
@@ -239,19 +259,21 @@ html.sidebar-collapsed .fd-sidebar-toggle {
   max-width: var(--fd-content-width);
 }
 
-.VPDoc .aside {
-  display: block !important;
-  width: 220px;
+/* 右侧目录：仅大屏展示，避免小屏 fixed 悬浮正文（VitePress aside-container 为 position:fixed） */
+@media (min-width: 1280px) {
+  .VPDoc .aside {
+    display: block !important;
+    width: 220px;
+  }
+
+  .VPDocAsideOutline.has-outline,
+  .VPDocAsideOutline:has(.static-outline) {
+    display: block !important;
+  }
 }
 
 .VPDocAside {
   padding-top: 4px;
-}
-
-/* 静态构建注入目录后必须显示（无 JS 时无 has-outline） */
-.VPDocAsideOutline.has-outline,
-.VPDocAsideOutline:has(.static-outline) {
-  display: block !important;
 }
 
 .VPDocAsideOutline .outline-title {
@@ -705,9 +727,24 @@ html.sidebar-collapsed .fd-sidebar-toggle {
   margin-top: 0.75rem;
 }
 
-@media (max-width: 960px) {
-  .VPDoc .aside {
+@media (max-width: 1279px) {
+  .VPDoc .aside,
+  .VPDoc .aside-container,
+  .VPDoc .aside-curtain,
+  .VPDocAside,
+  .VPDocAsideOutline {
     display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+  }
+
+  .VPDoc .container {
+    display: block !important;
+  }
+
+  .VPDoc.has-aside .content-container,
+  .VPDoc .content-container {
+    max-width: 100% !important;
   }
 }
 
@@ -716,7 +753,49 @@ html.sidebar-collapsed .fd-sidebar-toggle {
     --fd-sidebar-pad: 0px;
   }
 
+  html:not(.sidebar-collapsed) .VPSidebar {
+    box-shadow: 4px 0 24px rgba(15, 23, 42, 0.12);
+  }
+
+  html.sidebar-collapsed .fd-sidebar-toggle {
+    display: flex !important;
+  }
+
+  html:not(.sidebar-collapsed) .fd-sidebar-toggle {
+    display: none !important;
+  }
+
   .VPContent.has-sidebar {
     padding-left: 0 !important;
+  }
+
+  .VPDoc .container {
+    padding: 52px 16px 48px !important;
+  }
+
+  .vp-doc h1 {
+    font-size: 1.5rem;
+  }
+
+  .endpoint-block {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .vp-doc pre,
+  .vp-doc .table-wrap,
+  .vp-doc table {
+    max-width: 100%;
+  }
+}
+
+@media (min-width: 769px) {
+  html:not(.sidebar-collapsed) .VPContent.has-sidebar {
+    padding-left: var(--fd-sidebar-pad) !important;
+  }
+
+  html.sidebar-collapsed .fd-sidebar-toggle {
+    display: flex;
   }
 }

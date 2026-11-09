@@ -62,7 +62,14 @@ function injectOutline(html) {
 async function injectSidebarUiScript(html) {
   const js = await fs.readFile(path.resolve('scripts/sidebar-ui.inline.js'), 'utf8');
   const tag = `<script id="fd-sidebar-ui">${js}</script>`;
-  return html.replace('</body>', `${tag}</body>`);
+  let next = html.replace('</body>', `${tag}</body>`);
+  if (!next.includes('fd-sidebar-backdrop')) {
+    next = next.replace(
+      /<div id="fd-sidebar-toggle"/,
+      '<div class="fd-sidebar-backdrop" data-fd-action="sidebar-backdrop" aria-hidden="true"></div><div id="fd-sidebar-toggle"',
+    );
+  }
+  return next;
 }
 
 async function emptyDir(dir) {

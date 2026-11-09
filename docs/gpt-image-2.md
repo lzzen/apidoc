@@ -201,7 +201,9 @@ gpt-image-2 对图片输入默认按高保真处理，不需要也不允许通�
 
 ## 4. 出参规范
 
-成功响应为 OpenAI ImagesResponse：
+成功响应为 OpenAI ImagesResponse。`data[]` 里每张图只带 **`b64_json` 或 `url` 之一**，由请求中的 `response_format`（及渠道默认）决定，不会同时返回两种形态。
+
+### `response_format` 为 `b64_json`（常见默认）
 
 ```json
 {
@@ -225,12 +227,44 @@ gpt-image-2 对图片输入默认按高保真处理，不需要也不允许通�
 }
 ```
 
+### `response_format` 为 `url`
+
+请求里传 `"response_format": "url"`，或渠道默认解析为 `url` 时，`data[]` 返回可下载地址，不再带 `b64_json`：
+
+```json
+{
+  "created": 1777347817,
+  "data": [
+    {
+      "url": "https://openi.one/oss/....png",
+      "revised_prompt": "..."
+    }
+  ],
+  "model": "gpt-image-2",
+  "usage": {
+    "total_tokens": 772,
+    "input_tokens": 212,
+    "output_tokens": 560,
+    "input_tokens_details": {
+      "text_tokens": 120,
+      "image_tokens": 92
+    }
+  }
+}
+```
+
+| 项目 | 说明 |
+| --- | --- |
+| `data[].url` | 结果图 HTTP(S) 地址。上游若返回 base64，网关可能先物化到对象存储再给出本站或 CDN URL。 |
+| 有效期 | URL 可能有过期时间，拿到后请尽快下载或落盘。 |
+| 与 `b64_json` 互斥 | 同一 `data` 项不会同时包含 `url` 和 `b64_json`。 |
+
 ### 响应字段
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
 | `created` | integer | 响应创建时间戳。 |
-| `data` | Image[] | 图片结果列表。站点会优先返回 b64_json，便于直接保存为文件。 |
+| `data` | Image[] | 图片结果列表；每项为 `b64_json` 或 `url` 形态之一。 |
 | `model` | string | 实际模型 ID，是否返回取决于上游。 |
 | `usage` | object | token 使用量统计。计费通常需要同时关注文本输入、图片输入和图片输出 tokens。 |
 
@@ -238,11 +272,11 @@ gpt-image-2 对图片输入默认按高保真处理，不需要也不允许通�
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
-| `b64_json` | string | Base64 编码图片数据。当 response_format 解析为 b64_json（默认）时返回该字段。 |
-| `url` | string | 图片 URL。当 response_format 解析为 url 时返回该字段；网关会按需将上游 base64 上传至对象存储并填入该 URL。 |
+| `b64_json` | string | Base64 编码图片数据。`response_format` 为 `b64_json` 时返回。 |
+| `url` | string | 图片 URL。`response_format` 为 `url` 时返回。 |
 | `revised_prompt` | string | 上游可能返回的改写后 prompt。 |
 
-图片保存逻辑：
+保存 `b64_json`：
 
 ```ts
 import { writeFile } from "node:fs/promises";
@@ -253,6 +287,19 @@ if (!imageBase64) {
 }
 
 await writeFile("output.png", Buffer.from(imageBase64, "base64"));
+```
+
+使用 `url`：
+
+```ts
+const imageUrl = response.data[0]?.url;
+if (!imageUrl) {
+  throw new Error("No image URL returned");
+}
+
+const res = await fetch(imageUrl);
+if (!res.ok) throw new Error(`download failed: ${res.status}`);
+await writeFile("output.png", Buffer.from(await res.arrayBuffer()));
 ```
 
 ## 5. 接入代码示例

@@ -52,6 +52,7 @@ export default defineConfig({
     sidebar: [
       { text: 'gpt-image-2', link: 'gpt-image-2' },
       { text: 'gpt-image-2.5', link: 'gpt-image-2.5' },
+      { text: 'gpt-image-2.6', link: 'gpt-image-2.6' },
       { text: 'Gemini生图', link: 'gemini-image' },
       { text: '异步生图', link: 'async-image' },
       { text: 'ImgTools', link: 'imgtools' },
